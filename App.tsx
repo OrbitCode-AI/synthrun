@@ -11,9 +11,14 @@ import ShipPicker from './ShipPicker'
 import { type ShipConfig, SHIPS } from './Ships'
 import './styles.css'
 
+interface GameInstance {
+  start: () => void;
+  cleanup: () => void;
+}
+
 export default function App() {
-  const containerRef = useRef(null)
-  const gameRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const gameRef = useRef<GameInstance | null>(null)
   const [selectedShip, setSelectedShip] = useState<ShipConfig | null>(null)
   const [selectedAnim, setSelectedAnim] = useState(-1)
   const [started, setStarted] = useState(false)
@@ -22,7 +27,7 @@ export default function App() {
   const [victory, setVictory] = useState(false)
   const [paused, setPaused] = useState(false)
   const [musicOn, setMusicOn] = useState(true)
-  const [musicCommand, setMusicCommand] = useState(null)
+  const [musicCommand, setMusicCommand] = useState<string | null>(null)
 
   const skipPrev = useCallback(() => setMusicCommand('prev-' + Date.now()), [])
   const skipNext = useCallback(() => setMusicCommand('next-' + Date.now()), [])
@@ -58,7 +63,7 @@ export default function App() {
     gameRef.current = initializeGame(containerRef.current, {
       onScore: setScore,
       onGameOver: () => setGameOver(true),
-      onVictory: (finalScore) => {
+      onVictory: (finalScore: number) => {
         setScore(finalScore)
         setVictory(true)
       },

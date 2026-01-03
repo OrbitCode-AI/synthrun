@@ -183,7 +183,7 @@ export default function Ship() {
     }
   }, [currentIndex])
 
-  const handleSetup = useCallback(({ scene }) => {
+  const handleSetup = useCallback(({ scene }: { scene: THREE.Scene }) => {
     // Create ship group - rotated to face away from camera
     const ship = new THREE.Group()
     ship.rotation.y = Math.PI
@@ -206,7 +206,7 @@ export default function Ship() {
 
     // Keyboard controls
     const keys = keysRef.current
-    const onKeyDown = (e) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       // Movement
       if (SHIP_KEYS.left.includes(e.key)) keys.left = true
       if (SHIP_KEYS.right.includes(e.key)) keys.right = true
@@ -230,7 +230,7 @@ export default function Ship() {
         if (name) setTimeout(() => setAnimationName(null), 2000)
       }
     }
-    const onKeyUp = (e) => {
+    const onKeyUp = (e: KeyboardEvent) => {
       if (SHIP_KEYS.left.includes(e.key)) keys.left = false
       if (SHIP_KEYS.right.includes(e.key)) keys.right = false
       if (SHIP_KEYS.up.includes(e.key)) keys.up = false
@@ -240,7 +240,7 @@ export default function Ship() {
     window.addEventListener('keyup', onKeyUp)
   }, [])
 
-  const handleAnimate = useCallback((context, delta, time) => {
+  const handleAnimate = useCallback((_context: unknown, delta: number, time: number) => {
     const ship = shipGroupRef.current
     const shipLight = shipLightRef.current
     if (!ship) return

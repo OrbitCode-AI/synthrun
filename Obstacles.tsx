@@ -2,12 +2,12 @@
  * Obstacle generation with level progression and funnel patterns
  */
 import * as THREE from 'three'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef } from 'react'
 import { applySceneConfig } from './Scene'
 
 // Standalone preview - shows obstacle spawning with accelerated level progression
 export default function Obstacles() {
-  const containerRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!containerRef.current) return

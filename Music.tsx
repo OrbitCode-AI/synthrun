@@ -1,15 +1,20 @@
-import { useEffect, useRef, useState, useCallback } from 'preact/hooks'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useMusicKeys } from './Keyboard'
+
+interface MusicProps {
+  playing?: boolean;
+  command?: string | null;
+}
 
 // Music player with prev/play-pause/next controls
 // When standalone (preview), shows full UI. When embedded, just the iframe.
-export default function Music({ playing: externalPlaying, command }) {
+export default function Music({ playing: externalPlaying, command }: MusicProps) {
   const [internalPlaying, setInternalPlaying] = useState(true)
-  const [internalCommand, setInternalCommand] = useState(null)
+  const [internalCommand, setInternalCommand] = useState<string | null>(null)
   const playing = externalPlaying !== undefined ? externalPlaying : internalPlaying
   const activeCommand = command !== undefined ? command : internalCommand
-  const iframeRef = useRef(null)
-  const lastCommand = useRef(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const lastCommand = useRef<string | null>(null)
   const isStandalone = externalPlaying === undefined
 
   const params = new URLSearchParams({

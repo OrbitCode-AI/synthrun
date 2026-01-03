@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef } from 'react'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
@@ -20,7 +20,7 @@ import {
 
 // Standalone preview - auto-playing THREE.js demo using shared components
 export default function Game() {
-  const containerRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -54,7 +54,7 @@ export default function Game() {
     const { ship, shipLight } = createShip(scene)
 
     // Auto-pilot game state
-    const cubes = []
+    const cubes: THREE.Object3D[] = []
     let velocity = 0, speed = 0.5, gridOffset = 0, nextSpawn = 0
     let score = 0
 
@@ -69,7 +69,7 @@ export default function Game() {
 
     // Animation loop
     const clock = new THREE.Clock()
-    let animationId
+    let animationId: number
 
     function animate() {
       const delta = clock.getDelta()
@@ -154,8 +154,15 @@ export default function Game() {
   )
 }
 
+interface GameCallbacks {
+  onScore?: (score: number) => void;
+  onGameOver?: () => void;
+  onVictory?: (score: number) => void;
+  onPause?: (paused: boolean) => void;
+}
+
 // Export as arrow function assigned to const - HMR should not wrap this as a component
-export const initializeGame = (container, callbacks, shipConfig?: ShipConfig, animationIndex = -1) => {
+export const initializeGame = (container: HTMLElement, callbacks: GameCallbacks, shipConfig?: ShipConfig, animationIndex = -1) => {
   // Scene setup
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
@@ -257,7 +264,7 @@ export const initializeGame = (container, callbacks, shipConfig?: ShipConfig, an
   }
 
   // Keyboard controls using shared key mappings
-  const onKeyDown = (e) => {
+  const onKeyDown = (e: KeyboardEvent) => {
     // P to pause/unpause during gameplay
     if ((e.key === 'p' || e.key === 'P') && isStarted && !isGameOver && !isVictory) {
       isPaused = !isPaused
@@ -286,7 +293,7 @@ export const initializeGame = (container, callbacks, shipConfig?: ShipConfig, an
       cycleAnimation()
     }
   }
-  const onKeyUp = (e) => {
+  const onKeyUp = (e: KeyboardEvent) => {
     if (SHIP_KEYS.left.includes(e.key)) keys.left = false
     if (SHIP_KEYS.right.includes(e.key)) keys.right = false
     if (SHIP_KEYS.up.includes(e.key)) keys.up = false
@@ -306,7 +313,7 @@ export const initializeGame = (container, callbacks, shipConfig?: ShipConfig, an
 
   // Animation loop
   const clock = new THREE.Clock()
-  let animationId
+  let animationId: number
 
   function animate() {
     const delta = clock.getDelta()
@@ -407,12 +414,12 @@ export const initializeGame = (container, callbacks, shipConfig?: ShipConfig, an
       // Update obstacles and check for collisions
       const collision = updateObstacles(scene, cubes, ship.position.x, delta, speed, (scoreDelta) => {
         scoreValue += scoreDelta
-        callbacks.onScore(scoreValue)
+        callbacks.onScore?.(scoreValue)
       })
 
       if (collision) {
         isGameOver = true
-        callbacks.onGameOver()
+        callbacks.onGameOver?.()
       }
     }
 

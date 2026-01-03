@@ -3,7 +3,7 @@
  * Renders a subject (e.g. ship model) with orbiting light orbs
  */
 import * as THREE from 'three'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef } from 'react'
 import { SCENE_CONFIG } from './Scene'
 
 // Default light colors - synthwave palette
@@ -72,7 +72,7 @@ export interface LightboxContext {
 }
 
 export default function LightboxViewer({ config = {}, onSetup, onAnimate, children }: LightboxViewerProps) {
-  const containerRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const cfg = { ...defaultConfig, ...config }
 
   useEffect(() => {
@@ -142,10 +142,11 @@ export default function LightboxViewer({ config = {}, onSetup, onAnimate, childr
 
       // Update spinning lights
       for (const light of lights) {
-        const angle = light.userData.angle + time * light.userData.speed
-        light.position.x = Math.cos(angle) * light.userData.radius
-        light.position.z = Math.sin(angle) * light.userData.radius
-        light.position.y = light.userData.yOffset + Math.sin(time * 2 + light.userData.angle) * 0.5
+        const ud = light.userData as { angle: number; speed: number; radius: number; yOffset: number }
+        const angle = ud.angle + time * ud.speed
+        light.position.x = Math.cos(angle) * ud.radius
+        light.position.z = Math.sin(angle) * ud.radius
+        light.position.y = ud.yOffset + Math.sin(time * 2 + ud.angle) * 0.5
       }
 
       // Let parent animate their content

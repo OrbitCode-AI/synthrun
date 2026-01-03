@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef } from 'react'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
@@ -33,10 +33,11 @@ export function applySceneConfig(scene: THREE.Scene, renderer: THREE.WebGLRender
 
 // Standalone preview - animated synthwave scene using shared THREE.js components
 export default function Scene() {
-  const containerRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const container = containerRef.current
+    if (!container) return
 
     // Scene setup
     const scene = new THREE.Scene()
@@ -75,7 +76,7 @@ export default function Scene() {
 
     // Animation loop
     const clock = new THREE.Clock()
-    let animationId
+    let animationId: number
 
     function animate() {
       const delta = clock.getDelta()
@@ -110,7 +111,7 @@ export default function Scene() {
 function createGridTexture(color = '#ff00ff') {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 512
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
   ctx.fillStyle = '#050509'
   ctx.fillRect(0, 0, 512, 512)
   ctx.strokeStyle = color
@@ -136,7 +137,7 @@ function hexToColor(hex: number): string {
 }
 
 // Create scrolling ground plane - returns object with texture and setColor function
-export function createGround(scene) {
+export function createGround(scene: THREE.Scene) {
   const material = new THREE.MeshBasicMaterial({ map: createGridTexture(), transparent: true, opacity: 0.8 })
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), material)
   ground.rotation.x = -Math.PI / 2
@@ -144,7 +145,7 @@ export function createGround(scene) {
 
   // Return texture for scrolling and setColor for level changes
   return {
-    get offset() { return material.map.offset },
+    get offset() { return material.map!.offset },
     setColor(hexColor: number) {
       const colorStr = hexToColor(hexColor)
       material.map = createGridTexture(colorStr)
@@ -157,7 +158,7 @@ export function createGround(scene) {
 function createSunTexture() {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 256
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
   const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
   grad.addColorStop(0, '#ff6600')
   grad.addColorStop(0.6, '#ff0066')
@@ -169,7 +170,7 @@ function createSunTexture() {
 }
 
 // Create sun with smooth gradient
-export function createSun(scene) {
+export function createSun(scene: THREE.Scene) {
   const sun = new THREE.Mesh(
     new THREE.PlaneGeometry(20, 20),
     new THREE.MeshBasicMaterial({ map: createSunTexture(), transparent: true })
@@ -180,7 +181,7 @@ export function createSun(scene) {
 }
 
 // Create horizon line - returns object with setColor function
-export function createHorizon(scene) {
+export function createHorizon(scene: THREE.Scene) {
   const material = new THREE.MeshBasicMaterial({ color: 0x00ffff })
   const horizon = new THREE.Mesh(new THREE.PlaneGeometry(200, 0.5), material)
   horizon.rotation.x = -Math.PI / 2
@@ -195,7 +196,7 @@ export function createHorizon(scene) {
 }
 
 // Create starfield
-export function createStars(scene) {
+export function createStars(scene: THREE.Scene) {
   const starsGeom = new THREE.BufferGeometry()
   const starData = []
   for (let i = 0; i < 3000; i++) {

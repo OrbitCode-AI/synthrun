@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'preact/hooks'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 // Key mappings
 export const MUSIC_KEYS = {
@@ -14,12 +14,18 @@ export const SHIP_KEYS = {
   down: ['s', 'S', 'ArrowDown'],
 }
 
+interface MusicCallbacks {
+  onPrev?: () => void;
+  onToggle?: () => void;
+  onNext?: () => void;
+}
+
 // Hook for music controls (j=prev, k=toggle, l=next)
-export function useMusicKeys(callbacks) {
+export function useMusicKeys(callbacks: MusicCallbacks) {
   const { onPrev, onToggle, onNext } = callbacks
 
   useEffect(() => {
-    const onKeyDown = (e) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (MUSIC_KEYS.prev.includes(e.key)) onPrev?.()
       else if (MUSIC_KEYS.toggle.includes(e.key)) onToggle?.()
       else if (MUSIC_KEYS.next.includes(e.key)) onNext?.()
@@ -30,13 +36,13 @@ export function useMusicKeys(callbacks) {
 }
 
 // Hook for ship controls (WASD/arrows) - returns current key state
-export function useShipKeys(element) {
+export function useShipKeys(element?: RefObject<HTMLElement>) {
   const keys = useRef({ left: false, right: false, up: false, down: false })
 
   useEffect(() => {
     const target = element?.current || document
 
-    const onKeyDown = (e) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (SHIP_KEYS.left.includes(e.key)) keys.current.left = true
       if (SHIP_KEYS.right.includes(e.key)) keys.current.right = true
       if (SHIP_KEYS.up.includes(e.key)) keys.current.up = true
@@ -44,18 +50,18 @@ export function useShipKeys(element) {
       if (element) e.preventDefault()
     }
 
-    const onKeyUp = (e) => {
+    const onKeyUp = (e: KeyboardEvent) => {
       if (SHIP_KEYS.left.includes(e.key)) keys.current.left = false
       if (SHIP_KEYS.right.includes(e.key)) keys.current.right = false
       if (SHIP_KEYS.up.includes(e.key)) keys.current.up = false
       if (SHIP_KEYS.down.includes(e.key)) keys.current.down = false
     }
 
-    target.addEventListener('keydown', onKeyDown)
-    target.addEventListener('keyup', onKeyUp)
+    target.addEventListener('keydown', onKeyDown as EventListener)
+    target.addEventListener('keyup', onKeyUp as EventListener)
     return () => {
-      target.removeEventListener('keydown', onKeyDown)
-      target.removeEventListener('keyup', onKeyUp)
+      target.removeEventListener('keydown', onKeyDown as EventListener)
+      target.removeEventListener('keyup', onKeyUp as EventListener)
     }
   }, [element])
 
@@ -64,13 +70,13 @@ export function useShipKeys(element) {
 
 // Standalone preview - shows key bindings with live highlighting
 export default function Keyboard() {
-  const [pressed, setPressed] = useState({})
+  const [pressed, setPressed] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const onKeyDown = (e) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       setPressed(p => ({ ...p, [e.key]: true }))
     }
-    const onKeyUp = (e) => {
+    const onKeyUp = (e: KeyboardEvent) => {
       setPressed(p => ({ ...p, [e.key]: false }))
     }
     window.addEventListener('keydown', onKeyDown)
@@ -81,8 +87,8 @@ export default function Keyboard() {
     }
   }, [])
 
-  const isActive = (keys) => keys.some(k => pressed[k])
-  const rowStyle = (keys) => ({
+  const isActive = (keys: string[]) => keys.some(k => pressed[k])
+  const rowStyle = (keys: string[]) => ({
     padding: '0.3rem 0.8rem',
     borderRadius: '4px',
     transition: 'all 0.1s',
