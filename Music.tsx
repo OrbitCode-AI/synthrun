@@ -16,7 +16,7 @@ export default function Music({ playing: externalPlaying, command }) {
     autoplay: '1',
     controls: '0',
     loop: '1',
-    list: 'PLRBp0Fe2GpgkDw2aMG2lM5heA8cbLvOoN',
+    list: 'PLJI0AAXX2j3WeFaRxa8psa_cXGEaXMVTw',
     index: '0',
     enablejsapi: '1',
   })
