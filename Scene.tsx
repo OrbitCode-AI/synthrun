@@ -154,27 +154,36 @@ export function createGround(scene: THREE.Scene) {
   }
 }
 
-// Create sun texture with radial gradient
-function createSunTexture() {
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = 256
-  const ctx = canvas.getContext('2d')!
-  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
-  grad.addColorStop(0, '#ff6600')
-  grad.addColorStop(0.6, '#ff0066')
-  grad.addColorStop(1, 'transparent')
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, 256, 256)
-  const texture = new THREE.CanvasTexture(canvas)
-  return texture
-}
-
-// Create sun with smooth gradient
+// Create sun with ShaderMaterial for smooth gradient
 export function createSun(scene: THREE.Scene) {
-  const sun = new THREE.Mesh(
-    new THREE.PlaneGeometry(20, 20),
-    new THREE.MeshBasicMaterial({ map: createSunTexture(), transparent: true })
-  )
+  // @ts-ignore - ShaderMaterial available at runtime
+  const sunMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {},
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      void main() {
+        float dist = length(vUv - 0.5) * 2.0;
+
+        // Smooth radial gradient
+        vec3 core = vec3(1.0, 0.6, 0.1);
+        vec3 edge = vec3(1.0, 0.0, 0.4);
+        vec3 color = mix(core, edge, smoothstep(0.0, 0.8, dist));
+
+        float alpha = 1.0 - smoothstep(0.4, 1.0, dist);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  })
+
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), sunMaterial)
   sun.position.set(0, 6, -50)
   scene.add(sun)
   return sun
