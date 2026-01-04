@@ -130,13 +130,13 @@ export default function Obstacles() {
   )
 }
 
-// Level colors: red → orange → yellow → bright green → cyan → white
+// Level colors: red → orange → yellow → green → blue → white
 export const LEVEL_COLORS = [
-  0xff2244,  // Level 1: Red-pink (less magenta to differentiate from sun)
+  0xff2244,  // Level 1: Red-pink
   0xff6600,  // Level 2: Orange
   0xffff00,  // Level 3: Yellow
-  0x00ff00,  // Level 4: Bright green
-  0x00ffff,  // Level 5: Cyan
+  0x00ff00,  // Level 4: Green
+  0x0088ff,  // Level 5: Blue
   0xffffff,  // Level 6+: White
 ]
 

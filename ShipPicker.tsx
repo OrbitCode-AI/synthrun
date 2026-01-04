@@ -42,20 +42,14 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     currentIndex: -1,
   })
 
-  // Safety check for SHIPS array
-  if (!SHIPS || SHIPS.length === 0) {
-    return <div className="picker-error">Loading ships...</div>
-  }
-
-  const currentShip = SHIPS[currentIndex]
-
-  // Safety check for currentShip
-  if (!currentShip) {
-    return <div className="picker-error">Invalid ship index: {currentIndex}</div>
-  }
+  // Derive currentShip (may be undefined if SHIPS not loaded)
+  const currentShip = SHIPS?.[currentIndex]
 
   // Handle keyboard - ship cycling with [/], movement with WASD/arrows, animation with M
+  // NOTE: All hooks must be called before any conditional returns (Rules of Hooks)
   useEffect(() => {
+    // Skip if no ship selected yet
+    if (!currentShip) return
     const keys = keysRef.current
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -118,7 +112,8 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     animState.currentIndex = -1
     setAnimationName(null)
 
-    const config = SHIPS[currentIndex]
+    const config = SHIPS?.[currentIndex]
+    if (!config) return
     loadShipModel(config, ship, true, (result) => {
       animState.animations = result.animations
       animState.mixer = result.mixer
@@ -136,15 +131,18 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     scene.add(shipGroup)
     shipGroupRef.current = shipGroup
 
+    const firstShip = SHIPS?.[0]
+    if (!firstShip) return
+
     // Add ship glow light (using shared utility)
-    const shipLight = createShipLight(SHIPS[0], scene)
+    const shipLight = createShipLight(firstShip, scene)
     shipLightRef.current = shipLight
 
     // Add fallback geometry while loading (using shared utility)
     shipGroup.add(createFallbackCone(true))
 
     // Load initial ship
-    loadShipModel(SHIPS[0], shipGroup, true, (result) => {
+    loadShipModel(firstShip, shipGroup, true, (result) => {
       const animState = animStateRef.current
       animState.animations = result.animations
       animState.mixer = result.mixer
@@ -172,6 +170,14 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
       animStateRef.current.mixer.update(delta)
     }
   }, [])
+
+  // Safety checks - must be AFTER all hooks (Rules of Hooks)
+  if (!SHIPS || SHIPS.length === 0) {
+    return <div className="picker-error">Loading ships...</div>
+  }
+  if (!currentShip) {
+    return <div className="picker-error">Invalid ship index: {currentIndex}</div>
+  }
 
   return (
     <LightboxViewer onSetup={handleSetup} onAnimate={handleAnimate}>
