@@ -218,6 +218,7 @@ export const initializeGame = (container: HTMLElement, callbacks: GameCallbacks,
   let isSpinning = false
   let spinStartTime = 0
   let spinAxis: 'x' | 'y' = 'y'
+  let spinDirection = 1  // 1 or -1
   let spinStartRotation = { x: 0, y: 0, z: 0 }
   const SPIN_DURATION = 2  // seconds for celebration spin
   const keys = { left: false, right: false, up: false, down: false }
@@ -354,7 +355,7 @@ export const initializeGame = (container: HTMLElement, callbacks: GameCallbacks,
           const eased = spinProgress < 0.5
             ? 2 * spinProgress * spinProgress
             : 1 - Math.pow(-2 * spinProgress + 2, 2) / 2
-          const spinAngle = eased * Math.PI * 2  // Full 360° rotation
+          const spinAngle = eased * Math.PI * 2 * spinDirection  // Full 360° rotation
           // Apply spin on the chosen axis (x = flip, y = spin)
           if (spinAxis === 'x') {
             ship.rotation.x = spinStartRotation.x + spinAngle
@@ -407,6 +408,7 @@ export const initializeGame = (container: HTMLElement, callbacks: GameCallbacks,
             spinStartTime = time
             const axes: Array<'x' | 'y'> = ['x', 'y']
             spinAxis = axes[Math.floor(Math.random() * 2)]
+            spinDirection = Math.random() < 0.5 ? 1 : -1
             spinStartRotation = { x: ship.rotation.x, y: ship.rotation.y, z: ship.rotation.z }
           }
         }
