@@ -154,7 +154,7 @@ export function createGround(scene: THREE.Scene) {
   }
 }
 
-// Create sun with ShaderMaterial for smooth gradient
+// Create sun with ShaderMaterial - FBM noise for texture
 export function createSun(scene: THREE.Scene) {
   // @ts-ignore - ShaderMaterial available at runtime
   const sunMaterial = new THREE.ShaderMaterial({
@@ -169,16 +169,54 @@ export function createSun(scene: THREE.Scene) {
     `,
     fragmentShader: `
       varying vec2 vUv;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+      }
+
+      float fbm(vec2 p) {
+        float v = 0.0;
+        v += noise(p * 4.0) * 0.5;
+        v += noise(p * 8.0) * 0.25;
+        v += noise(p * 16.0) * 0.125;
+        return v;
+      }
+
       void main() {
         float dist = length(vUv - 0.5) * 2.0;
+        float diskRadius = 0.8;
+        float normalizedDist = clamp(dist / diskRadius, 0.0, 1.0);
 
-        // Smooth radial gradient
-        vec3 core = vec3(1.0, 0.6, 0.1);
-        vec3 edge = vec3(1.0, 0.0, 0.4);
-        vec3 color = mix(core, edge, smoothstep(0.0, 0.8, dist));
+        // Limb brightening - darker center, brighter edge
+        vec3 centerColor = vec3(0.7, 0.25, 0.05);
+        vec3 edgeColor = vec3(1.0, 0.6, 0.1);
+        float limb = pow(normalizedDist, 0.6);
+        vec3 baseColor = mix(centerColor, edgeColor, limb);
 
-        float alpha = 1.0 - smoothstep(0.4, 1.0, dist);
-        gl_FragColor = vec4(color, alpha);
+        // Add granular texture
+        float tex = fbm(vUv * 20.0);
+        baseColor *= 0.7 + tex * 0.4;
+
+        // Bright rim
+        float rim = smoothstep(0.85, 0.98, normalizedDist);
+        baseColor = mix(baseColor, vec3(1.0, 0.7, 0.15), rim * 0.5);
+
+        // Disk mask
+        float diskMask = 1.0 - smoothstep(diskRadius - 0.02, diskRadius + 0.02, dist);
+        float alpha = diskMask;
+
+        gl_FragColor = vec4(baseColor, alpha);
       }
     `,
   })
