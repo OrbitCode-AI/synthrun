@@ -9,6 +9,7 @@ export function createSun(scene: THREE.Scene) {
   // @ts-ignore - ShaderMaterial available at runtime
   const sunMaterial = new THREE.ShaderMaterial({
     transparent: true,
+    depthWrite: false,  // Don't write to depth buffer (transparent)
     uniforms: {
       uTime: { value: 0.0 }
     },
@@ -52,7 +53,8 @@ export function createSun(scene: THREE.Scene) {
         float dist = length(center) * 2.0;
         float angle = atan(center.y, center.x);
 
-        float diskRadius = 0.75;
+        // Smaller disk radius relative to plane (plane is now larger)
+        float diskRadius = 0.38;
         float normalizedDist = clamp(dist / diskRadius, 0.0, 1.0);
 
         // Dark burnt orange base
@@ -60,23 +62,30 @@ export function createSun(scene: THREE.Scene) {
         vec3 lightSpot = vec3(0.45, 0.12, 0.008);
 
         // Deep granulation texture
-        float tex = fbm(vUv * 40.0);
+        float tex = fbm(vUv * 80.0);  // Higher frequency for smaller disk
         tex = tex * tex;
         vec3 baseColor = mix(darkSpot, lightSpot, tex);
 
-        // Limb brightening
-        float limb = pow(normalizedDist, 3.0);
-        baseColor = mix(baseColor, baseColor * 1.3, limb);
+        // Limb brightening - gradual increase toward edge
+        float limb = pow(normalizedDist, 4.0);
+        baseColor = mix(baseColor, baseColor * 1.4, limb);
 
-        // Thin bright rim
-        float rim = smoothstep(0.96, 0.995, normalizedDist);
-        baseColor = mix(baseColor, vec3(0.6, 0.28, 0.025), rim);
+        // Very thin bright rim - gradient falloff like reference
+        // Peak brightness right at edge, falls off quickly inward
+        float rimPeak = smoothstep(0.97, 0.995, normalizedDist);
+        float rimGlow = smoothstep(0.85, 0.995, normalizedDist) * 0.3;
+        vec3 rimColor = vec3(0.9, 0.5, 0.08);
+        baseColor = mix(baseColor, baseColor + rimColor * rimGlow, 1.0);
+        baseColor = mix(baseColor, rimColor, rimPeak * 0.7);
 
         // Hard disk cutoff
         float diskMask = 1.0 - step(diskRadius, dist);
 
         // === ANIMATED SOLAR FLARES ===
-        float flareRegion = step(diskRadius * 0.92, dist) * (1.0 - step(diskRadius * 3.0, dist));
+        // Start flares from just inside disk edge, extend far out
+        float flareStart = diskRadius * 0.95;
+        float flareEnd = 0.95;  // Near edge of UV space
+        float flareRegion = smoothstep(flareStart, diskRadius, dist) * (1.0 - smoothstep(flareEnd * 0.8, flareEnd, dist));
 
         float flares = 0.0;
         for (float i = 0.0; i < 4.0; i++) {
@@ -88,28 +97,36 @@ export function createSun(scene: THREE.Scene) {
           float ray = pow(rayNoise, 2.0);
 
           float distFromEdge = (dist - diskRadius) / diskRadius;
-          float fadeFactor = exp(-distFromEdge * 1.8);
+          float fadeFactor = exp(-distFromEdge * 1.2);
 
           flares += ray * fadeFactor * (0.5 - i * 0.08);
         }
         flares *= flareRegion;
 
-        vec3 flareColor = vec3(0.7, 0.3, 0.06) * flares;
+        // Edge fade - flares fade out toward plane edges
+        float edgeFade = 1.0 - smoothstep(0.7, 0.98, dist);
+        flares *= edgeFade;
 
-        // Tiny corona
-        float corona = exp(-pow((dist - diskRadius) * 18.0, 2.0)) * 0.03;
+        vec3 flareColor = vec3(0.6, 0.25, 0.05) * flares;
+
+        // Soft corona glow
+        float corona = exp(-pow((dist - diskRadius) * 12.0, 2.0)) * 0.04;
         corona *= step(diskRadius, dist);
+        corona *= edgeFade;
 
-        float alpha = max(diskMask, max(corona, flares * 0.8));
-        vec3 finalColor = baseColor * diskMask + vec3(0.3, 0.1, 0.01) * corona + flareColor;
+        float alpha = max(diskMask, max(corona, flares * 0.6));
+        vec3 finalColor = baseColor * diskMask + vec3(0.25, 0.1, 0.01) * corona + flareColor;
 
         gl_FragColor = vec4(finalColor, alpha);
       }
     `,
   })
 
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(25, 25), sunMaterial)
+  // Larger plane so flares don't get truncated
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), sunMaterial)
   sun.position.set(0, 6, -50)
+  // @ts-ignore - renderOrder exists on Object3D
+  sun.renderOrder = -1  // Render before ground so ground occludes it
   scene.add(sun)
 
   return {

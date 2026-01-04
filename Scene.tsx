@@ -140,9 +140,11 @@ function hexToColor(hex: number): string {
 
 // Create scrolling ground plane - returns object with texture and setColor function
 export function createGround(scene: THREE.Scene) {
-  const material = new THREE.MeshBasicMaterial({ map: createGridTexture(), transparent: true, opacity: 0.8 })
+  const material = new THREE.MeshBasicMaterial({ map: createGridTexture() })
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), material)
   ground.rotation.x = -Math.PI / 2
+  // @ts-ignore - renderOrder exists on Object3D
+  ground.renderOrder = 1  // Render after sun so it occludes it
   scene.add(ground)
 
   // Return texture for scrolling and setColor for level changes
