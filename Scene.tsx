@@ -85,8 +85,9 @@ export default function Scene() {
       // Scroll ground
       gridTexture.offset.y += delta * 0.5
 
-      // Pulse sun
-      sun.scale.setScalar(1 + Math.sin(time * 2) * 0.1)
+      // Animate sun flares and pulse
+      sun.update(time)
+      sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
       // Rotate stars slowly
       stars.rotation.y += delta * 0.01
@@ -154,12 +155,14 @@ export function createGround(scene: THREE.Scene) {
   }
 }
 
-// Create sun with ShaderMaterial - FBM noise for texture
+// Create sun with animated solar flares
 export function createSun(scene: THREE.Scene) {
   // @ts-ignore - ShaderMaterial available at runtime
   const sunMaterial = new THREE.ShaderMaterial({
     transparent: true,
-    uniforms: {},
+    uniforms: {
+      uTime: { value: 0.0 }
+    },
     vertexShader: `
       varying vec2 vUv;
       void main() {
@@ -168,6 +171,7 @@ export function createSun(scene: THREE.Scene) {
       }
     `,
     fragmentShader: `
+      uniform float uTime;
       varying vec2 vUv;
 
       float hash(vec2 p) {
@@ -190,50 +194,82 @@ export function createSun(scene: THREE.Scene) {
         v += noise(p * 4.0) * 0.5;
         v += noise(p * 8.0) * 0.25;
         v += noise(p * 16.0) * 0.125;
+        v += noise(p * 32.0) * 0.0625;
         return v;
       }
 
       void main() {
-        float dist = length(vUv - 0.5) * 2.0;
-        float diskRadius = 0.78;
+        vec2 center = vUv - 0.5;
+        float dist = length(center) * 2.0;
+        float angle = atan(center.y, center.x);
+
+        float diskRadius = 0.75;
         float normalizedDist = clamp(dist / diskRadius, 0.0, 1.0);
 
-        // Very dark burnt orange base
-        vec3 darkSpot = vec3(0.25, 0.06, 0.005);
-        vec3 lightSpot = vec3(0.5, 0.15, 0.01);
+        // Dark burnt orange base
+        vec3 darkSpot = vec3(0.18, 0.04, 0.002);
+        vec3 lightSpot = vec3(0.45, 0.12, 0.008);
 
-        // High contrast texture - squared for more contrast
-        float tex = fbm(vUv * 35.0);
+        // Deep granulation texture
+        float tex = fbm(vUv * 40.0);
         tex = tex * tex;
         vec3 baseColor = mix(darkSpot, lightSpot, tex);
 
         // Limb brightening
-        float limb = pow(normalizedDist, 2.0);
-        baseColor = mix(baseColor, baseColor * 1.3, limb);
+        float limb = pow(normalizedDist, 2.5);
+        baseColor = mix(baseColor, baseColor * 1.4, limb);
 
-        // Thin bright rim - less bright
-        float rim = smoothstep(0.92, 0.99, normalizedDist);
-        baseColor = mix(baseColor, vec3(0.7, 0.35, 0.04), rim);
+        // Thin bright rim
+        float rim = smoothstep(0.93, 0.995, normalizedDist);
+        baseColor = mix(baseColor, vec3(0.65, 0.3, 0.03), rim);
 
         // Hard disk cutoff
         float diskMask = 1.0 - step(diskRadius, dist);
 
+        // === ANIMATED SOLAR FLARES ===
+        float flareRegion = step(diskRadius * 0.95, dist) * (1.0 - step(diskRadius * 2.5, dist));
+
+        float flares = 0.0;
+        for (float i = 0.0; i < 3.0; i++) {
+          float speed = 0.05 + i * 0.02;
+          float scale = 8.0 + i * 4.0;
+          float angleOffset = uTime * speed + i * 2.094;
+
+          float rayNoise = noise(vec2(angle * scale + angleOffset, dist * 3.0 + uTime * 0.03));
+          float ray = pow(rayNoise, 3.0);
+
+          float distFromEdge = (dist - diskRadius) / diskRadius;
+          float fadeFactor = exp(-distFromEdge * 2.5);
+
+          flares += ray * fadeFactor * (0.4 - i * 0.1);
+        }
+        flares *= flareRegion;
+
+        vec3 flareColor = vec3(0.5, 0.2, 0.04) * flares;
+
         // Tiny corona
-        float corona = exp(-pow((dist - diskRadius) * 20.0, 2.0)) * 0.04;
+        float corona = exp(-pow((dist - diskRadius) * 18.0, 2.0)) * 0.03;
         corona *= step(diskRadius, dist);
 
-        float alpha = max(diskMask, corona);
-        vec3 finalColor = baseColor * diskMask + vec3(0.4, 0.15, 0.01) * corona;
+        float alpha = max(diskMask, max(corona, flares * 0.5));
+        vec3 finalColor = baseColor * diskMask + vec3(0.35, 0.12, 0.01) * corona + flareColor;
 
         gl_FragColor = vec4(finalColor, alpha);
       }
     `,
   })
 
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), sunMaterial)
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(25, 25), sunMaterial)
   sun.position.set(0, 6, -50)
   scene.add(sun)
-  return sun
+
+  return {
+    mesh: sun,
+    material: sunMaterial,
+    update(time: number) {
+      sunMaterial.uniforms.uTime.value = time;
+    }
+  }
 }
 
 // Create horizon line - returns object with setColor function

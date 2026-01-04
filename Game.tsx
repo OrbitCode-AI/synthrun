@@ -77,7 +77,8 @@ export default function Game() {
 
       // Animate scene elements
       stars.rotation.y += delta * 0.01
-      sun.scale.setScalar(1 + Math.sin(time * 2) * 0.1)
+      sun.update(time)
+      sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
       // Scroll ground
       gridOffset += delta * speed * 3
@@ -320,7 +321,8 @@ export const initializeGame = (container: HTMLElement, callbacks: GameCallbacks,
     const time = clock.getElapsedTime()
 
     stars.rotation.y += delta * 0.01
-    sun.scale.setScalar(1 + Math.sin(time * 2) * 0.1)
+    sun.update(time)
+    sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
     if (isStarted && !isGameOver && !isPaused) {
       // Scroll ground
