@@ -195,28 +195,36 @@ export function createSun(scene: THREE.Scene) {
 
       void main() {
         float dist = length(vUv - 0.5) * 2.0;
-        float diskRadius = 0.8;
+        float diskRadius = 0.78;
         float normalizedDist = clamp(dist / diskRadius, 0.0, 1.0);
 
-        // Limb brightening - darker center, brighter edge
-        vec3 centerColor = vec3(0.7, 0.25, 0.05);
-        vec3 edgeColor = vec3(1.0, 0.6, 0.1);
-        float limb = pow(normalizedDist, 0.6);
-        vec3 baseColor = mix(centerColor, edgeColor, limb);
+        // Much darker base colors
+        vec3 darkSpot = vec3(0.45, 0.12, 0.02);
+        vec3 lightSpot = vec3(0.7, 0.25, 0.03);
 
-        // Add granular texture
-        float tex = fbm(vUv * 20.0);
-        baseColor *= 0.7 + tex * 0.4;
+        // High contrast texture
+        float tex = fbm(vUv * 30.0);
+        vec3 baseColor = mix(darkSpot, lightSpot, tex);
 
-        // Bright rim
-        float rim = smoothstep(0.85, 0.98, normalizedDist);
-        baseColor = mix(baseColor, vec3(1.0, 0.7, 0.15), rim * 0.5);
+        // Limb brightening
+        float limb = pow(normalizedDist, 2.0);
+        baseColor = mix(baseColor, baseColor * 1.3, limb);
 
-        // Disk mask
-        float diskMask = 1.0 - smoothstep(diskRadius - 0.02, diskRadius + 0.02, dist);
-        float alpha = diskMask;
+        // Thin bright rim
+        float rim = smoothstep(0.9, 0.98, normalizedDist);
+        baseColor = mix(baseColor, vec3(0.8, 0.4, 0.05), rim);
 
-        gl_FragColor = vec4(baseColor, alpha);
+        // Hard disk cutoff
+        float diskMask = 1.0 - step(diskRadius, dist);
+
+        // Minimal corona
+        float corona = exp(-pow((dist - diskRadius) * 15.0, 2.0)) * 0.05;
+        corona *= step(diskRadius, dist);
+
+        float alpha = max(diskMask, corona);
+        vec3 finalColor = baseColor * diskMask + vec3(0.5, 0.2, 0.02) * corona;
+
+        gl_FragColor = vec4(finalColor, alpha);
       }
     `,
   })
