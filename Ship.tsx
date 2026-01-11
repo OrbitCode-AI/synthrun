@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import { useRef, useCallback, useState, useEffect } from 'preact/hooks'
 import { SHIP_KEYS } from './Keyboard'
-import LightboxViewer from './Lightbox'
+import Lightbox from './Lightbox'
 import { SHIPS, loadShipModel, getShipConfig, type ShipConfig } from './Ships'
 import './styles.css'
 
@@ -265,7 +265,7 @@ export default function Ship() {
   const currentShip = SHIPS[currentIndex]
 
   return (
-    <LightboxViewer onSetup={handleSetup} onAnimate={handleAnimate}>
+    <Lightbox onSetup={handleSetup} onAnimate={handleAnimate}>
       <div className="picker-info">
         <div className="picker-ship-name">{currentShip.name}</div>
         {currentShip.credit && (
@@ -297,7 +297,7 @@ export default function Ship() {
           [/] or 1-8 ships • M anims • WASD fly
         </div>
       </div>
-    </LightboxViewer>
+    </Lightbox>
   )
 }
 

@@ -1,5 +1,5 @@
 /**
- * LightboxViewer - 3D object viewer with spinning colored lights
+ * Lightbox - 3D object viewer with spinning colored lights
  * Renders a subject (e.g. ship model) with orbiting light orbs
  */
 import * as THREE from 'three'
@@ -57,7 +57,7 @@ const defaultConfig: Required<LightboxConfig> = {
   ambientIntensity: 0.3,
 }
 
-export interface LightboxViewerProps {
+export interface LightboxProps {
   config?: LightboxConfig
   onSetup?: (context: LightboxContext) => void
   onAnimate?: (context: LightboxContext, delta: number, time: number) => void
@@ -71,7 +71,7 @@ export interface LightboxContext {
   lights: THREE.PointLight[]
 }
 
-export default function LightboxViewer({ config = {}, onSetup, onAnimate, children }: LightboxViewerProps) {
+export default function Lightbox({ config = {}, onSetup, onAnimate, children }: LightboxProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cfg = { ...defaultConfig, ...config }
 

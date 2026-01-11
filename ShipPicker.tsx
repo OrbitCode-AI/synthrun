@@ -1,11 +1,11 @@
 /**
  * ShipPicker - Select a ship model before starting the game
- * Uses LightboxViewer to display ships with spinning lights
+ * Uses Lightbox to display ships with spinning lights
  * Controls: WASD/Arrows to fly, [/] to cycle ships, 1-8 for direct select, M for anims, Enter to confirm
  */
 import * as THREE from 'three'
 import { useRef, useState, useEffect, useCallback } from 'preact/hooks'
-import LightboxViewer from './Lightbox'
+import Lightbox from './Lightbox'
 import { SHIPS, loadShipModel, type ShipConfig } from './Ships'
 import { SHIP_KEYS } from './Keyboard'
 import {
@@ -180,7 +180,7 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
   }
 
   return (
-    <LightboxViewer onSetup={handleSetup} onAnimate={handleAnimate}>
+    <Lightbox onSetup={handleSetup} onAnimate={handleAnimate}>
       <div className="picker-header">
         <h1 className="picker-title">SELECT SHIP</h1>
       </div>
@@ -224,6 +224,6 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
       >
         SELECT
       </button>
-    </LightboxViewer>
+    </Lightbox>
   )
 }
