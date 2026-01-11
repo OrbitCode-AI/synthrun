@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three'
 import { useRef, useState, useEffect, useCallback } from 'preact/hooks'
-import LightboxViewer from './LightboxViewer'
+import LightboxViewer from './Lightbox'
 import { SHIPS, loadShipModel, type ShipConfig } from './Ships'
 import { SHIP_KEYS } from './Keyboard'
 import {
