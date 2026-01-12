@@ -19,6 +19,9 @@ export default function ShipsConfig() {
   )
 }
 
+// CDN base URL for 3D models (loaded at runtime, not bundled with project)
+const MODELS_CDN = 'https://orbitcode.ai/models'
+
 export interface ShipConfig {
   id: string
   name: string
@@ -43,7 +46,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'lowpoly',
     name: 'Low Poly',
-    url: '/models/spaceship/scene.gltf',
+    url: `${MODELS_CDN}/spaceship/scene.gltf`,
     scale: 0.03,
     previewScale: 0.06,
     rotation: Math.PI,
@@ -58,7 +61,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'cuberun',
     name: 'CubeRun',
-    url: '/models/cuberun/spaceship.gltf',
+    url: `${MODELS_CDN}/cuberun/spaceship.gltf`,
     scale: 0.3,
     previewScale: 0.5,
     rotation: 0,
@@ -75,7 +78,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'buster_drone',
     name: 'Buster Drone',
-    url: '/models/buster_drone/scene.gltf',
+    url: `${MODELS_CDN}/buster_drone/scene.gltf`,
     scale: 0.5,
     previewScale: 1.0,
     rotation: Math.PI,
@@ -93,7 +96,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'boot',
     name: 'Low Poly Boot',
-    url: '/models/low_poly_boot/scene.gltf',
+    url: `${MODELS_CDN}/low_poly_boot/scene.gltf`,
     scale: 2.125,
     previewScale: 4.25,
     rotation: 0,
@@ -110,7 +113,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'banana_duck',
     name: 'Banana Duck',
-    url: '/models/banana_duck/scene.gltf',
+    url: `${MODELS_CDN}/banana_duck/scene.gltf`,
     scale: 0.33,
     previewScale: 0.67,
     rotation: 0,
@@ -127,7 +130,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'silly_potato',
     name: 'Silly Potato',
-    url: '/models/silly_potato/scene.gltf',
+    url: `${MODELS_CDN}/silly_potato/scene.gltf`,
     scale: 1.125,
     previewScale: 2.25,
     rotation: 0,
@@ -144,7 +147,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'starman',
     name: 'Star Man',
-    url: '/models/starman/scene.gltf',
+    url: `${MODELS_CDN}/starman/scene.gltf`,
     scale: 13.4,
     previewScale: 26.8,
     rotation: 0,
@@ -159,7 +162,7 @@ export const SHIPS: ShipConfig[] = [
   {
     id: 'space_woman',
     name: 'Space Woman',
-    url: '/models/space_woman/scene.gltf',
+    url: `${MODELS_CDN}/space_woman/scene.gltf`,
     scale: 0.5,
     previewScale: 1.0,
     rotation: 0,
