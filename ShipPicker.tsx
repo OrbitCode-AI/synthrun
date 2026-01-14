@@ -31,6 +31,7 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
   const [animationName, setAnimationName] = useState<string | null>(null)
   const shipGroupRef = useRef<THREE.Group | null>(null)
   const shipLightRef = useRef<THREE.PointLight | null>(null)
+  const overheadLightRef = useRef<THREE.DirectionalLight | null>(null)
   const keysRef = useRef({ left: false, right: false, up: false, down: false })
   const velocityRef = useRef({ x: 0, y: 0 })
 
@@ -119,9 +120,12 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
       animState.mixer = result.mixer
     })
 
-    // FIX: Update light intensity for new ship
+    // Update light intensities for new ship
     if (shipLight) {
       shipLight.intensity = config.shipLightIntensity ?? 2.0
+    }
+    if (overheadLightRef.current) {
+      overheadLightRef.current.intensity = config.overheadLightIntensity ?? 0.8
     }
   }, [currentIndex])
 
@@ -137,6 +141,14 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     // Add ship glow light (using shared utility)
     const shipLight = createShipLight(firstShip, scene)
     shipLightRef.current = shipLight
+
+    // Add overhead directional light (same as Game.tsx)
+    const overheadIntensity = firstShip.overheadLightIntensity ?? 0.8
+    const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
+    overheadLight.position.set(0, 10, 10)
+    overheadLight.target = shipGroup
+    scene.add(overheadLight)
+    overheadLightRef.current = overheadLight
 
     // Add fallback geometry while loading (using shared utility)
     shipGroup.add(createFallbackCone(true))
