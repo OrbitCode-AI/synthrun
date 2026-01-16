@@ -12,6 +12,9 @@ import './styles.css'
 // SHARED CONSTANTS
 // ============================================================================
 
+// Index of ship to display in standalone preview (0-based)
+export const PREVIEW_SHIP_INDEX = 0
+
 export const MOVEMENT = {
   accel: 35,
   friction: 0.92,
@@ -158,7 +161,7 @@ export default function Ship() {
   })
 
   // Use first ship
-  const shipConfig = SHIPS[0]
+  const shipConfig = SHIPS[PREVIEW_SHIP_INDEX]
 
   const handleSetup = useCallback(({ scene }: { scene: THREE.Scene }) => {
     // Create ship group - rotated to face away from camera
