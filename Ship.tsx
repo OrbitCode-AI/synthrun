@@ -144,6 +144,7 @@ export function cycleAnimation(state: AnimationState, forward: boolean): string 
 export default function Ship() {
   const shipGroupRef = useRef<THREE.Group | null>(null)
   const shipLightRef = useRef<THREE.PointLight | null>(null)
+  const overheadLightRef = useRef<THREE.DirectionalLight | null>(null)
   const keysRef = useRef({ left: false, right: false, up: false, down: false })
   const velocityRef = useRef({ x: 0, y: 0 })
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -177,9 +178,12 @@ export default function Ship() {
       animState.mixer = result.mixer
     })
 
-    // Update light intensity for new ship
+    // Update light intensities for new ship
     if (shipLight) {
       shipLight.intensity = config.shipLightIntensity ?? 2.0
+    }
+    if (overheadLightRef.current) {
+      overheadLightRef.current.intensity = config.overheadLightIntensity ?? 0.8
     }
   }, [currentIndex])
 
@@ -196,6 +200,14 @@ export default function Ship() {
     // Ship glow light
     const shipLight = createShipLight(SHIPS[0], scene)
     shipLightRef.current = shipLight
+
+    // Overhead directional light (same as ShipPicker and Game)
+    const overheadIntensity = SHIPS[0].overheadLightIntensity ?? 0.8
+    const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
+    overheadLight.position.set(0, 10, 10)
+    overheadLight.target = ship
+    scene.add(overheadLight)
+    overheadLightRef.current = overheadLight
 
     // Load initial ship
     loadShipModel(SHIPS[0], ship, true, (result) => {
