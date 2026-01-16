@@ -1,5 +1,5 @@
 /**
- * Synthwave Runner - inspired by CubeRun by Adam Karlsten
+ * Synth Run - inspired by CubeRun by Adam Karlsten
  * Original: https://cuberun.adamkarlsten.com/
  * Source: https://github.com/akarlsten/cuberun (MIT License)
  */
