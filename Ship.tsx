@@ -2,10 +2,10 @@
  * Ship preview, shared utilities, and game ship creation
  */
 import * as THREE from 'three'
-import { useRef, useCallback, useState, useEffect } from 'preact/hooks'
+import { useRef, useCallback, useState } from 'preact/hooks'
 import { SHIP_KEYS } from './Keyboard'
 import Lightbox from './Lightbox'
-import { SHIPS, loadShipModel, getShipConfig, type ShipConfig } from './Ships'
+import { SHIPS, loadShipModel, type ShipConfig } from './Ships'
 import './styles.css'
 
 // ============================================================================
@@ -140,14 +140,13 @@ export function cycleAnimation(state: AnimationState, forward: boolean): string 
 // SHIP PREVIEW COMPONENT
 // ============================================================================
 
-// Standalone preview - 3D ship viewer with cycling and controls
+// Standalone preview - single ship that flies around
 export default function Ship() {
   const shipGroupRef = useRef<THREE.Group | null>(null)
   const shipLightRef = useRef<THREE.PointLight | null>(null)
   const overheadLightRef = useRef<THREE.DirectionalLight | null>(null)
   const keysRef = useRef({ left: false, right: false, up: false, down: false })
   const velocityRef = useRef({ x: 0, y: 0 })
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [animationName, setAnimationName] = useState<string | null>(null)
 
   // Animation state
@@ -158,34 +157,8 @@ export default function Ship() {
     currentIndex: -1,
   })
 
-  // Load ship model when index changes
-  useEffect(() => {
-    const ship = shipGroupRef.current
-    const shipLight = shipLightRef.current
-    if (!ship) return
-
-    // Reset animation state
-    const animState = animStateRef.current
-    animState.animations = []
-    animState.mixer = null
-    animState.currentAction = null
-    animState.currentIndex = -1
-    setAnimationName(null)
-
-    const config = SHIPS[currentIndex]
-    loadShipModel(config, ship, true, (result) => {
-      animState.animations = result.animations
-      animState.mixer = result.mixer
-    })
-
-    // Update light intensities for new ship
-    if (shipLight) {
-      shipLight.intensity = config.shipLightIntensity ?? 2.0
-    }
-    if (overheadLightRef.current) {
-      overheadLightRef.current.intensity = config.overheadLightIntensity ?? 0.8
-    }
-  }, [currentIndex])
+  // Use first ship
+  const shipConfig = SHIPS[0]
 
   const handleSetup = useCallback(({ scene }: { scene: THREE.Scene }) => {
     // Create ship group - rotated to face away from camera
@@ -198,19 +171,19 @@ export default function Ship() {
     ship.add(createFallbackCone(true))
 
     // Ship glow light
-    const shipLight = createShipLight(SHIPS[0], scene)
+    const shipLight = createShipLight(shipConfig, scene)
     shipLightRef.current = shipLight
 
     // Overhead directional light (same as ShipPicker and Game)
-    const overheadIntensity = SHIPS[0].overheadLightIntensity ?? 0.8
+    const overheadIntensity = shipConfig.overheadLightIntensity ?? 0.8
     const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
     overheadLight.position.set(0, 10, 10)
     overheadLight.target = ship
     scene.add(overheadLight)
     overheadLightRef.current = overheadLight
 
-    // Load initial ship
-    loadShipModel(SHIPS[0], ship, true, (result) => {
+    // Load ship model
+    loadShipModel(shipConfig, ship, true, (result) => {
       const animState = animStateRef.current
       animState.animations = result.animations
       animState.mixer = result.mixer
@@ -224,16 +197,6 @@ export default function Ship() {
       if (SHIP_KEYS.right.includes(e.key)) keys.right = true
       if (SHIP_KEYS.up.includes(e.key)) keys.up = true
       if (SHIP_KEYS.down.includes(e.key)) keys.down = true
-
-      // Ship cycling
-      const num = parseInt(e.key)
-      if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
-        setCurrentIndex(num - 1)
-      } else if (e.key === '[') {
-        setCurrentIndex(i => (i - 1 + SHIPS.length) % SHIPS.length)
-      } else if (e.key === ']') {
-        setCurrentIndex(i => (i + 1) % SHIPS.length)
-      }
 
       // Animation cycling
       if (e.key === 'm' || e.key === 'M') {
@@ -250,7 +213,7 @@ export default function Ship() {
     }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
-  }, [])
+  }, [shipConfig])
 
   const handleAnimate = useCallback((_context: unknown, delta: number, time: number) => {
     const ship = shipGroupRef.current
@@ -274,22 +237,20 @@ export default function Ship() {
     }
   }, [])
 
-  const currentShip = SHIPS[currentIndex]
-
   return (
     <Lightbox onSetup={handleSetup} onAnimate={handleAnimate}>
       <div className="picker-info">
-        <div className="picker-ship-name">{currentShip.name}</div>
-        {currentShip.credit && (
+        <div className="picker-ship-name">{shipConfig.name}</div>
+        {shipConfig.credit && (
           <div className="picker-credit">
-            <a href={currentShip.creditUrl} target="_blank" rel="noopener">
-              {currentShip.credit}
+            <a href={shipConfig.creditUrl} target="_blank" rel="noopener">
+              {shipConfig.credit}
             </a>
             {' by '}
-            <a href={currentShip.authorUrl} target="_blank" rel="noopener">
-              {currentShip.author}
+            <a href={shipConfig.authorUrl} target="_blank" rel="noopener">
+              {shipConfig.author}
             </a>
-            {' ('}{currentShip.license}{')'}
+            {' ('}{shipConfig.license}{')'}
           </div>
         )}
         {animationName && (
@@ -297,16 +258,8 @@ export default function Ship() {
         )}
       </div>
       <div className="picker-footer">
-        <div className="picker-dots">
-          {SHIPS.map((ship, i) => (
-            <span
-              key={ship.id}
-              className={`picker-dot ${i === currentIndex ? 'active' : ''}`}
-            />
-          ))}
-        </div>
         <div className="picker-controls">
-          [/] or 1-8 ships • M anims • WASD fly
+          WASD fly • M anims
         </div>
       </div>
     </Lightbox>
