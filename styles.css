@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Orbitron', 'Courier New', monospace;
+  font-family: "Orbitron", "Courier New", monospace;
 }
 
 .menu {
@@ -107,8 +107,12 @@
 }
 
 @keyframes victoryGlow {
-  from { filter: drop-shadow(0 0 30px rgba(255, 255, 0, 0.8)); }
-  to { filter: drop-shadow(0 0 60px rgba(0, 255, 255, 1)); }
+  from {
+    filter: drop-shadow(0 0 30px rgba(255, 255, 0, 0.8));
+  }
+  to {
+    filter: drop-shadow(0 0 60px rgba(0, 255, 255, 1));
+  }
 }
 
 .final-score {
@@ -118,8 +122,12 @@
 }
 
 @keyframes glow {
-  from { filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.8)); }
-  to { filter: drop-shadow(0 0 40px rgba(0, 255, 255, 0.8)); }
+  from {
+    filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.8));
+  }
+  to {
+    filter: drop-shadow(0 0 40px rgba(0, 255, 255, 0.8));
+  }
 }
 
 .music-controls {

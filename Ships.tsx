@@ -1,45 +1,56 @@
 /**
  * Ship model configurations
  */
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // Default export for preview
 export default function ShipsConfig() {
   return (
-    <div style={{ background: '#0a0015', color: '#00ffff', fontFamily: 'monospace', padding: 40, minHeight: '100vh' }}>
+    <div
+      style={{
+        background: '#0a0015',
+        color: '#00ffff',
+        fontFamily: 'monospace',
+        padding: 40,
+        minHeight: '100vh',
+      }}
+    >
       <h1 style={{ color: '#ff00ff' }}>Ships</h1>
       {SHIPS.map((s, i) => (
         <div key={s.id} style={{ marginBottom: 15, padding: 10, border: '1px solid #333' }}>
-          <b style={{ color: '#ff00ff' }}>{i + 1}. {s.name}</b> - {s.credit} ({s.license})
+          <b style={{ color: '#ff00ff' }}>
+            {i + 1}. {s.name}
+          </b>{' '}
+          - {s.credit} ({s.license})
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 // CDN base URL for 3D models (loaded at runtime, not bundled with project)
-const MODELS_CDN = 'https://orbitcode.ai/models'
+const MODELS_CDN = 'https://orbitcode.ai/models';
 
 export interface ShipConfig {
-  id: string
-  name: string
-  url: string
-  scale: number
-  previewScale: number  // Larger scale for lightbox preview
-  rotation: number      // Y rotation for picker (facing camera)
-  gameRotation: number  // Y rotation for game (facing away from camera)
-  yOffset?: number      // Vertical offset for picker (negative = lower)
-  gameYOffset?: number  // Vertical offset for game
-  hideMeshes?: string[] // Mesh names to hide (e.g. ground planes)
-  overheadLightIntensity?: number  // White light from above (default 0.8)
-  shipLightIntensity?: number      // Magenta glow light below ship (default 2.0)
-  credit?: string
-  creditUrl?: string    // Link to model source
-  author?: string
-  authorUrl?: string    // Link to author profile
-  license?: string
+  id: string;
+  name: string;
+  url: string;
+  scale: number;
+  previewScale: number; // Larger scale for lightbox preview
+  rotation: number; // Y rotation for picker (facing camera)
+  gameRotation: number; // Y rotation for game (facing away from camera)
+  yOffset?: number; // Vertical offset for picker (negative = lower)
+  gameYOffset?: number; // Vertical offset for game
+  hideMeshes?: string[]; // Mesh names to hide (e.g. ground planes)
+  overheadLightIntensity?: number; // White light from above (default 0.8)
+  shipLightIntensity?: number; // Magenta glow light below ship (default 2.0)
+  credit?: string;
+  creditUrl?: string; // Link to model source
+  author?: string;
+  authorUrl?: string; // Link to author profile
+  license?: string;
 }
 
 export const SHIPS: ShipConfig[] = [
@@ -53,7 +64,8 @@ export const SHIPS: ShipConfig[] = [
     gameRotation: 0,
     overheadLightIntensity: 2,
     credit: 'Low Poly Spaceship',
-    creditUrl: 'https://sketchfab.com/3d-models/low-poly-spaceship-82f637f65f894ffe948300183ebe904d',
+    creditUrl:
+      'https://sketchfab.com/3d-models/low-poly-spaceship-82f637f65f894ffe948300183ebe904d',
     author: 'Edwin3D',
     authorUrl: 'https://sketchfab.com/Edwin3D',
     license: 'CC-BY-4.0',
@@ -154,7 +166,8 @@ export const SHIPS: ShipConfig[] = [
     gameRotation: Math.PI,
     shipLightIntensity: 0.1,
     credit: 'Star Man - Earthbound',
-    creditUrl: 'https://sketchfab.com/3d-models/star-man-earthbound-51b87ab2a6274a8683dca20859868a78',
+    creditUrl:
+      'https://sketchfab.com/3d-models/star-man-earthbound-51b87ab2a6274a8683dca20859868a78',
     author: 'timRAGE90',
     authorUrl: 'https://sketchfab.com/timRAGE90',
     license: 'CC-BY-4.0',
@@ -176,26 +189,26 @@ export const SHIPS: ShipConfig[] = [
     authorUrl: 'https://sketchfab.com/vintar',
     license: 'CC-BY-4.0',
   },
-]
+];
 
 // Shared loader instances
-let gltfLoader: any = null
-let dracoLoader: any = null
+let gltfLoader: any = null;
+let dracoLoader: any = null;
 
 function getLoader() {
   if (!gltfLoader) {
-    gltfLoader = new GLTFLoader()
-    dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/')
-    gltfLoader.setDRACOLoader(dracoLoader)
+    gltfLoader = new GLTFLoader();
+    dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    gltfLoader.setDRACOLoader(dracoLoader);
   }
-  return gltfLoader
+  return gltfLoader;
 }
 
 export interface LoadedShipModel {
-  model: THREE.Object3D
-  animations: THREE.AnimationClip[]
-  mixer: THREE.AnimationMixer | null
+  model: THREE.Object3D;
+  animations: THREE.AnimationClip[];
+  mixer: THREE.AnimationMixer | null;
 }
 
 /**
@@ -205,50 +218,50 @@ export function loadShipModel(
   config: ShipConfig,
   group: THREE.Group,
   usePreviewScale = false,
-  onLoad?: (result: LoadedShipModel) => void
+  onLoad?: (result: LoadedShipModel) => void,
 ) {
-  const loader = getLoader()
-  const scale = usePreviewScale ? config.previewScale : config.scale
-  const rotation = usePreviewScale ? config.rotation : config.gameRotation
+  const loader = getLoader();
+  const scale = usePreviewScale ? config.previewScale : config.scale;
+  const rotation = usePreviewScale ? config.rotation : config.gameRotation;
 
   loader.load(
     config.url,
     (gltf: any) => {
       // Clear existing children
       while (group.children.length) {
-        group.remove(group.children[0])
+        group.remove(group.children[0]);
       }
-      const model = gltf.scene
-      model.scale.set(scale, scale, scale)
-      model.rotation.y = rotation
-      const yOffset = usePreviewScale ? config.yOffset : config.gameYOffset
-      if (yOffset) model.position.y = yOffset
+      const model = gltf.scene;
+      model.scale.set(scale, scale, scale);
+      model.rotation.y = rotation;
+      const yOffset = usePreviewScale ? config.yOffset : config.gameYOffset;
+      if (yOffset) model.position.y = yOffset;
       // Hide specified meshes (e.g. ground planes)
       if (config.hideMeshes?.length) {
         model.traverse((child: any) => {
           if (config.hideMeshes!.includes(child.name)) {
-            child.visible = false
+            child.visible = false;
           }
-        })
+        });
       }
-      group.add(model)
+      group.add(model);
 
       // Create mixer if there are animations
-      const animations = gltf.animations || []
-      const mixer = animations.length > 0 ? new THREE.AnimationMixer(model) : null
+      const animations = gltf.animations || [];
+      const mixer = animations.length > 0 ? new THREE.AnimationMixer(model) : null;
 
-      onLoad?.({ model, animations, mixer })
+      onLoad?.({ model, animations, mixer });
     },
     undefined,
     (error: any) => {
-      console.warn('Could not load ship model:', error.message)
-    }
-  )
+      console.warn('Could not load ship model:', error.message);
+    },
+  );
 }
 
 /**
  * Get ship config by ID, defaulting to first ship
  */
 export function getShipConfig(id: string): ShipConfig {
-  return SHIPS.find(s => s.id === id) || SHIPS[0]
+  return SHIPS.find((s) => s.id === id) || SHIPS[0];
 }

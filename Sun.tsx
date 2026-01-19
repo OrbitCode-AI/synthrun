@@ -1,17 +1,17 @@
 /**
  * Sun.tsx - Animated sun with shader-based solar flares
  */
-import * as THREE from 'three'
-import { useEffect, useRef } from 'react'
+import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
 
 // Create sun with animated solar flares
 export function createSun(scene: THREE.Scene) {
   // @ts-ignore - ShaderMaterial available at runtime
   const sunMaterial = new THREE.ShaderMaterial({
     transparent: true,
-    depthWrite: false,  // Don't write to depth buffer (transparent)
+    depthWrite: false, // Don't write to depth buffer (transparent)
     uniforms: {
-      uTime: { value: 0.0 }
+      uTime: { value: 0.0 },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -120,75 +120,80 @@ export function createSun(scene: THREE.Scene) {
         gl_FragColor = vec4(finalColor, alpha);
       }
     `,
-  })
+  });
 
   // Larger plane so flares don't get truncated
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), sunMaterial)
-  sun.position.set(0, 6, -50)
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), sunMaterial);
+  sun.position.set(0, 6, -50);
   // @ts-ignore - renderOrder exists on Object3D
-  sun.renderOrder = -1  // Render before ground so ground occludes it
-  scene.add(sun)
+  sun.renderOrder = -1; // Render before ground so ground occludes it
+  scene.add(sun);
 
   return {
     mesh: sun,
     material: sunMaterial,
     update(time: number) {
       sunMaterial.uniforms.uTime.value = time;
-    }
-  }
+    },
+  };
 }
 
 // Standalone preview - isolated sun for testing the shader
 export default function Sun() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    const container = containerRef.current;
+    if (!container) return;
 
     // Simple scene - just the sun on black
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x000000)
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200)
-    camera.position.set(0, 0, 30)
-    camera.lookAt(0, 0, 0)
+    const camera = new THREE.PerspectiveCamera(
+      50,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      200,
+    );
+    camera.position.set(0, 0, 30);
+    camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    container.appendChild(renderer.domElement)
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
 
     // Create sun at origin for clear view
-    const sun = createSun(scene)
-    sun.mesh.position.set(0, 0, 0)
+    const sun = createSun(scene);
+    sun.mesh.position.set(0, 0, 0);
 
     // Resize handler
     const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
-    }
-    window.addEventListener('resize', onResize)
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', onResize);
 
     // Animation loop
-    const clock = new THREE.Clock()
-    let animationId: number
+    const clock = new THREE.Clock();
+    let animationId: number;
 
     function animate() {
-      const time = clock.getElapsedTime()
-      sun.update(time)
-      renderer.render(scene, camera)
-      animationId = requestAnimationFrame(animate)
+      const time = clock.getElapsedTime();
+      sun.update(time);
+      renderer.render(scene, camera);
+      animationId = requestAnimationFrame(animate);
     }
-    animate()
+    animate();
 
     return () => {
-      cancelAnimationFrame(animationId)
-      window.removeEventListener('resize', onResize)
-      renderer.dispose()
-      container.removeChild(renderer.domElement)
-    }
-  }, [])
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', onResize);
+      renderer.dispose();
+      container.removeChild(renderer.domElement);
+    };
+  }, []);
 
-  return <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#000' }} />
+  return <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#000' }} />;
 }

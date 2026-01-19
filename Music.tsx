@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { useMusicKeys } from './Keyboard'
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useMusicKeys } from './Keyboard';
 
 interface MusicProps {
   playing?: boolean;
@@ -9,13 +9,13 @@ interface MusicProps {
 // Music player with prev/play-pause/next controls
 // When standalone (preview), shows full UI. When embedded, just the iframe.
 export default function Music({ playing: externalPlaying, command }: MusicProps) {
-  const [internalPlaying, setInternalPlaying] = useState(true)
-  const [internalCommand, setInternalCommand] = useState<string | null>(null)
-  const playing = externalPlaying !== undefined ? externalPlaying : internalPlaying
-  const activeCommand = command !== undefined ? command : internalCommand
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const lastCommand = useRef<string | null>(null)
-  const isStandalone = externalPlaying === undefined
+  const [internalPlaying, setInternalPlaying] = useState(true);
+  const [internalCommand, setInternalCommand] = useState<string | null>(null);
+  const playing = externalPlaying !== undefined ? externalPlaying : internalPlaying;
+  const activeCommand = command !== undefined ? command : internalCommand;
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const lastCommand = useRef<string | null>(null);
+  const isStandalone = externalPlaying === undefined;
 
   const params = new URLSearchParams({
     autoplay: '1',
@@ -24,37 +24,41 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
     list: 'PLJI0AAXX2j3WeFaRxa8psa_cXGEaXMVTw',
     index: '0',
     enablejsapi: '1',
-  })
+  });
 
-  const skipPrev = useCallback(() => setInternalCommand('prev-' + Date.now()), [])
-  const skipNext = useCallback(() => setInternalCommand('next-' + Date.now()), [])
-  const togglePlay = useCallback(() => setInternalPlaying(p => !p), [])
+  const skipPrev = useCallback(() => setInternalCommand('prev-' + Date.now()), []);
+  const skipNext = useCallback(() => setInternalCommand('next-' + Date.now()), []);
+  const togglePlay = useCallback(() => setInternalPlaying((p) => !p), []);
 
   // Keyboard controls (j=prev, k=toggle, l=next) - only when standalone
-  useMusicKeys(isStandalone ? { onPrev: skipPrev, onToggle: togglePlay, onNext: skipNext } : {})
+  useMusicKeys(isStandalone ? { onPrev: skipPrev, onToggle: togglePlay, onNext: skipNext } : {});
 
   // Handle play/pause
   useEffect(() => {
-    if (!iframeRef.current) return
-    const cmd = playing ? 'playVideo' : 'pauseVideo'
+    if (!iframeRef.current) return;
+    const cmd = playing ? 'playVideo' : 'pauseVideo';
     iframeRef.current.contentWindow?.postMessage(
       JSON.stringify({ event: 'command', func: cmd, args: '' }),
-      '*'
-    )
-  }, [playing])
+      '*',
+    );
+  }, [playing]);
 
   // Handle skip commands (next/prev)
   useEffect(() => {
-    if (!iframeRef.current || !activeCommand || activeCommand === lastCommand.current) return
-    lastCommand.current = activeCommand
-    const func = activeCommand.startsWith('next') ? 'nextVideo' : activeCommand.startsWith('prev') ? 'previousVideo' : null
+    if (!iframeRef.current || !activeCommand || activeCommand === lastCommand.current) return;
+    lastCommand.current = activeCommand;
+    const func = activeCommand.startsWith('next')
+      ? 'nextVideo'
+      : activeCommand.startsWith('prev')
+        ? 'previousVideo'
+        : null;
     if (func) {
       iframeRef.current.contentWindow?.postMessage(
         JSON.stringify({ event: 'command', func, args: '' }),
-        '*'
-      )
+        '*',
+      );
     }
-  }, [activeCommand])
+  }, [activeCommand]);
 
   const btnStyle = {
     width: '2.5rem',
@@ -68,13 +72,11 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  };
 
   return (
     <>
-      {isStandalone && (
-        <div style={{ position: 'fixed', inset: 0, background: '#050509' }} />
-      )}
+      {isStandalone && <div style={{ position: 'fixed', inset: 0, background: '#050509' }} />}
       <iframe
         ref={iframeRef}
         src={`https://www.youtube.com/embed/b5BNUa_op2o?${params}`}
@@ -89,21 +91,31 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
         }}
       />
       {isStandalone && (
-        <div style={{
-          position: 'fixed',
-          bottom: '1.5rem',
-          right: '1.5rem',
-          display: 'flex',
-          gap: '0.5rem',
-          zIndex: 100,
-        }}>
-          <button onClick={skipPrev} style={btnStyle} title="Previous track (J)">⏮</button>
-          <button onClick={togglePlay} style={btnStyle} title={internalPlaying ? 'Pause (K)' : 'Play (K)'}>
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            right: '1.5rem',
+            display: 'flex',
+            gap: '0.5rem',
+            zIndex: 100,
+          }}
+        >
+          <button onClick={skipPrev} style={btnStyle} title="Previous track (J)">
+            ⏮
+          </button>
+          <button
+            onClick={togglePlay}
+            style={btnStyle}
+            title={internalPlaying ? 'Pause (K)' : 'Play (K)'}
+          >
             {internalPlaying ? '⏸' : '▶'}
           </button>
-          <button onClick={skipNext} style={btnStyle} title="Next track (L)">⏭</button>
+          <button onClick={skipNext} style={btnStyle} title="Next track (L)">
+            ⏭
+          </button>
         </div>
       )}
     </>
-  )
+  );
 }
