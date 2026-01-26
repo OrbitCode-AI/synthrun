@@ -1,4 +1,7 @@
 {
   "name": "Synth Run",
-  "darkMode": true
+  "description": "3D game with neon grid, bloom effects, and music",
+  "icon": "🎮",
+  "defaultTheme": "dark",
+  "defaultLayout": "fullscreen"
 }
