@@ -265,7 +265,7 @@
 
 .now-playing-label {
   position: fixed;
-  bottom: 0.8rem;
+  bottom: 0.3rem;
   right: 1.5rem;
   color: #00ffff;
   font-size: 0.72rem;
@@ -277,16 +277,25 @@
   z-index: 100;
   text-align: center;
   pointer-events: none;
-  max-width: 200px;
+  max-width: 400px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.now-playing-label span {
+  display: inline-block;
+  animation: marquee 15s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
 
 .ship-info {
   position: fixed;
   right: 1.5rem;
-  bottom: 6.2rem;
+  bottom: 5rem;
   text-align: right;
   color: #ff00ff;
   font-family: "Courier New", monospace;

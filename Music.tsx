@@ -43,6 +43,7 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
       JSON.stringify({ event: 'command', func: cmd, args: '' }),
       '*',
     )
+    iframeRef.current.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
   }, [playing])
 
   // Handle skip commands (next/prev)
@@ -59,6 +60,7 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
         JSON.stringify({ event: 'command', func, args: '' }),
         '*',
       )
+      iframeRef.current.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
     }
   }, [activeCommand])
 
@@ -98,7 +100,7 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
       iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
     }
     postListening()
-    const intervalId = window.setInterval(postListening, 5000)
+    const intervalId = window.setInterval(postListening, 2000)
     return () => window.clearInterval(intervalId)
   }, [])
 
@@ -163,7 +165,9 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
           </button>
         </div>
       )}
-      <div className="now-playing-label">♪ {songTitle || 'NOW PLAYING'}</div>
+      <div className="now-playing-label">
+        <span>♪ {songTitle || 'NOW PLAYING'}</span>
+      </div>
     </>
   )
 }
