@@ -13,15 +13,15 @@
 }
 
 .menu {
+  position: fixed;
   text-align: center;
   pointer-events: auto;
-}
-
-.start-menu {
-  position: fixed;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
+  padding: 7%;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .title {
@@ -45,13 +45,13 @@
 
 .start-btn {
   font-family: inherit;
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 900;
   width: 16rem;
   padding: 0.9rem 1.25rem;
   background: transparent;
-  border: 3px solid #ff6600;
-  color: #ff6600;
+  border: 3px solid #00ffff;
+  color: #00ffff;
   cursor: pointer;
   letter-spacing: 0.2em;
   transition: all 0.3s;
@@ -60,15 +60,15 @@
 }
 
 .start-btn:hover {
-  background: #ff6600;
-  color: #000;
-  box-shadow: 0 0 30px #ff6600;
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 30px #00ffff;
+  transform: translateY(-2px);
 }
 
 .menu-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 2.6rem;
   align-items: center;
 }
 
@@ -132,8 +132,8 @@
 }
 
 .game-over {
-  font-size: 3rem;
-  color: #ff0066;
+  font-size: 6rem;
+  color: #ffff00;
   margin: 0;
   text-shadow: 0 0 30px #ff0066;
 }
@@ -150,7 +150,7 @@
 }
 
 .victory {
-  font-size: 4rem;
+  font-size: 6rem;
   margin: 0;
   background: linear-gradient(180deg, #ffff00 0%, #00ff00 50%, #00ffff 100%);
   -webkit-background-clip: text;
@@ -254,12 +254,12 @@
 }
 
 .credit {
-  color: #ff00ff;
+  color: #00ffff;
   font-size: 0.72rem;
   font-family: "Courier New", monospace;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.45);
+  text-shadow: 0 0 8px #00ffff;
   opacity: 0.8;
 }
 

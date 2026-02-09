@@ -175,7 +175,7 @@ export default function App() {
       </div>
       <div className="hud">
         {!started && (
-          <div className="menu start-menu">
+          <div className="menu">
             <h1 className="title">SYNTHRUN</h1>
             <div className="menu-buttons">
               <button type="button" className="start-btn" onClick={handleStart}>
