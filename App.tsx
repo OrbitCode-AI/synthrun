@@ -31,6 +31,7 @@ export default function App() {
   const [paused, setPaused] = useState(false)
   const [musicOn, setMusicOn] = useState(true)
   const [musicCommand, setMusicCommand] = useState<string | null>(null)
+  const [songTitle, setSongTitle] = useState('')
 
   const skipPrev = useCallback(() => setMusicCommand(`prev-${Date.now()}`), [])
   const skipNext = useCallback(() => setMusicCommand(`next-${Date.now()}`), [])
@@ -133,7 +134,9 @@ export default function App() {
       onKeyDown={handleClick}
       role="presentation"
       style={{ position: 'fixed', inset: 0 }}>
-      {started && <Music playing={musicOn} command={musicCommand} />}
+      {started && (
+        <Music playing={musicOn} command={musicCommand} onSongChange={setSongTitle} />
+      )}
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       <div className="music-panel">
         <div className="music-controls">
@@ -168,7 +171,7 @@ export default function App() {
             ⏭
           </button>
         </div>
-        <div className="credit">♪ Now Playing</div>
+        <div className="credit">♪ {songTitle || 'NOW PLAYING'}</div>
       </div>
       <div className="ship-info">
         <p>SHIP: {selectedShip.name}</p>

@@ -4,17 +4,19 @@ import { useMusicKeys } from './Keyboard'
 interface MusicProps {
   playing?: boolean
   command?: string | null
+  onSongChange?: (title: string) => void
 }
 
 // Music player with prev/play-pause/next controls
 // When standalone (preview), shows full UI. When embedded, just the iframe.
-export default function Music({ playing: externalPlaying, command }: MusicProps) {
+export default function Music({ playing: externalPlaying, command, onSongChange }: MusicProps) {
   const [internalPlaying, setInternalPlaying] = useState(true)
   const [internalCommand, setInternalCommand] = useState<string | null>(null)
   const playing = externalPlaying !== undefined ? externalPlaying : internalPlaying
   const activeCommand = command !== undefined ? command : internalCommand
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const lastCommand = useRef<string | null>(null)
+  const lastSongTitle = useRef('')
   const isStandalone = externalPlaying === undefined
 
   const params = new URLSearchParams({
@@ -60,6 +62,43 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
     }
   }, [activeCommand])
 
+  // Subscribe to YouTube player events and emit song title changes.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const iframeWindow = iframeRef.current?.contentWindow
+      if (!iframeWindow || event.source !== iframeWindow) return
+
+      let payload: unknown = event.data
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload)
+        } catch {
+          return
+        }
+      }
+      if (!payload || typeof payload !== 'object') return
+
+      const info = (payload as { info?: unknown }).info
+      if (!info || typeof info !== 'object') return
+
+      const videoData = (info as { videoData?: unknown }).videoData
+      if (!videoData || typeof videoData !== 'object') return
+
+      const title = (videoData as { title?: unknown }).title
+      if (typeof title !== 'string' || !title || title === lastSongTitle.current) return
+
+      lastSongTitle.current = title
+      onSongChange?.(title)
+    }
+
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [onSongChange])
+
+  const handleIframeLoad = useCallback(() => {
+    iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
+  }, [])
+
   const btnStyle = {
     width: '2.5rem',
     height: '2.5rem',
@@ -79,6 +118,7 @@ export default function Music({ playing: externalPlaying, command }: MusicProps)
       {isStandalone && <div style={{ position: 'fixed', inset: 0, background: '#050509' }} />}
       <iframe
         ref={iframeRef}
+        onLoad={handleIframeLoad}
         src={`https://www.youtube.com/embed/b5BNUa_op2o?${params}`}
         title="Background music player"
         frameBorder="0"
