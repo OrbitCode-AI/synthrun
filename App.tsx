@@ -136,7 +136,7 @@ export default function App() {
       onKeyDown={handleClick}
       role="presentation"
       style={{ position: 'fixed', inset: 0 }}>
-      {started && <Music playing={musicOn} command={musicCommand} />}
+      <Music playing={started && musicOn} command={started ? musicCommand : null} />
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       <div className="music-panel">
         <div className="music-controls">
@@ -173,8 +173,8 @@ export default function App() {
         </div>
       </div>
       <div className="ship-info">
-        <p>SHIP: {displayShipName}</p>
         {highScore > 0 && <p>HIGH SCORE: {highScore}</p>}
+        <p>SHIP: {displayShipName}</p>
       </div>
       <div className="hud">
         {!started && (
@@ -193,7 +193,6 @@ export default function App() {
         {started && !gameOver && !victory && (
           <div className="score-wrap">
             <div className="score">SCORE: {score}</div>
-            {highScore > 0 && <div className="score-high">HIGH SCORE: {highScore}</div>}
           </div>
         )}
         {(!started || paused || gameOver || victory) && (

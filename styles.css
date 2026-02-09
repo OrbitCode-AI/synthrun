@@ -267,12 +267,12 @@
   position: fixed;
   bottom: 0.8rem;
   right: 1.5rem;
-  color: #ff00ff;
+  color: #00ffff;
   font-size: 0.72rem;
   font-family: "Courier New", monospace;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.45);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.45);
   opacity: 0.8;
   z-index: 100;
   text-align: center;
