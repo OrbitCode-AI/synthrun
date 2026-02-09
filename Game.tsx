@@ -173,6 +173,7 @@ interface GameCallbacks {
   onGameOver?: () => void
   onVictory?: (score: number) => void
   onPause?: (paused: boolean) => void
+  onShipChange?: (ship: ShipConfig) => void
 }
 
 // Export as arrow function assigned to const - HMR should not wrap this as a component
@@ -278,6 +279,7 @@ export const initializeGame = (
       animations = result.animations
       currentMixer = result.mixer
     })
+    callbacks.onShipChange?.(SHIPS[currentShipIndex])
   }
 
   // Helper to cycle animation during gameplay

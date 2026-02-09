@@ -74,6 +74,7 @@ export default function App() {
           setVictory(true)
         },
         onPause: setPaused,
+        onShipChange: (ship: ShipConfig) => setSelectedShip(ship),
       },
       selectedShip,
       selectedAnim,
