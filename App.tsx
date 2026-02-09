@@ -134,66 +134,57 @@ export default function App() {
       style={{ position: 'fixed', inset: 0 }}>
       {started && <Music playing={musicOn} command={musicCommand} />}
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
-      <div className="music-controls">
-        <button
-          type="button"
-          className="music-btn"
-          onClick={e => {
-            e.stopPropagation()
-            skipPrev()
-          }}
-          title="Previous track (J)">
-          ⏮
-        </button>
-        <button
-          type="button"
-          className="music-btn"
-          onClick={e => {
-            e.stopPropagation()
-            toggleMusic()
-          }}
-          title={musicOn ? 'Pause (K)' : 'Play (K)'}>
-          {musicOn ? '⏸' : '▶'}
-        </button>
-        <button
-          type="button"
-          className="music-btn"
-          onClick={e => {
-            e.stopPropagation()
-            skipNext()
-          }}
-          title="Next track (L)">
-          ⏭
-        </button>
+      <div className="music-panel">
+        <div className="music-controls">
+          <button
+            type="button"
+            className="music-btn"
+            onClick={e => {
+              e.stopPropagation()
+              skipPrev()
+            }}
+            title="Previous track (J)">
+            ⏮
+          </button>
+          <button
+            type="button"
+            className="music-btn"
+            onClick={e => {
+              e.stopPropagation()
+              toggleMusic()
+            }}
+            title={musicOn ? 'Pause (K)' : 'Play (K)'}>
+            {musicOn ? '⏸' : '▶'}
+          </button>
+          <button
+            type="button"
+            className="music-btn"
+            onClick={e => {
+              e.stopPropagation()
+              skipNext()
+            }}
+            title="Next track (L)">
+            ⏭
+          </button>
+        </div>
+        <div className="credit">♪ Now Playing</div>
       </div>
-      <a
-        href="https://cuberun.adamkarlsten.com/"
-        target="_blank"
-        rel="noreferrer noopener"
-        className="credit"
-        onClick={e => e.stopPropagation()}>
-        Inspired by CubeRun
-      </a>
+      <div className="ship-info">
+        <p>SHIP: {selectedShip.name}</p>
+        {highScore > 0 && <p>HIGH SCORE: {highScore}</p>}
+      </div>
       <div className="hud">
         {!started && (
-          <div className="menu">
-            <h1 className="title">SYNTHWAVE</h1>
-            <h2 className="subtitle">RUNNER</h2>
-            <p style={{ color: '#00ffff', fontFamily: 'monospace', marginBottom: '1rem' }}>
-              Ship: {selectedShip.name}
-            </p>
-            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
-            <button type="button" className="start-btn" onClick={handleStart}>
-              START
-            </button>
-            <button
-              type="button"
-              className="start-btn"
-              onClick={handleChangeShip}
-              style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-              CHANGE SHIP
-            </button>
-            <p className="controls">WASD move • P pause • Enter start</p>
+          <div className="menu start-menu">
+            <h1 className="title">SYNTHRUN</h1>
+            <div className="menu-buttons">
+              <button type="button" className="start-btn" onClick={handleStart}>
+                START
+              </button>
+              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
+                CHANGE SHIP
+              </button>
+            </div>
           </div>
         )}
         {started && !gameOver && !victory && (
@@ -202,46 +193,43 @@ export default function App() {
             {highScore > 0 && <div className="score-high">HIGH SCORE: {highScore}</div>}
           </div>
         )}
+        {(!started || paused || gameOver || victory) && (
+          <p className="controls">WASD move • P pause • Enter start</p>
+        )}
         {paused && (
           <div className="menu">
             <h1 className="paused">PAUSED</h1>
-            <p className="controls">Press P to resume</p>
+            <p className="controls resume-hint">Press P to resume</p>
           </div>
         )}
         {gameOver && !victory && (
           <div className="menu">
             <h1 className="game-over">GAME OVER</h1>
             <p className="final-score">SCORE: {score}</p>
-            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
             {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
-            <button type="button" className="start-btn" onClick={handleStart}>
-              RETRY
-            </button>
-            <button
-              type="button"
-              className="start-btn"
-              onClick={handleChangeShip}
-              style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-              CHANGE SHIP
-            </button>
+            <div className="menu-buttons">
+              <button type="button" className="start-btn" onClick={handleStart}>
+                RETRY
+              </button>
+              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
+                CHANGE SHIP
+              </button>
+            </div>
           </div>
         )}
         {victory && (
           <div className="menu">
             <h1 className="victory">VICTORY!</h1>
             <p className="final-score">FINAL SCORE: {score}</p>
-            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
             {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
-            <button type="button" className="start-btn" onClick={handleStart}>
-              PLAY AGAIN
-            </button>
-            <button
-              type="button"
-              className="start-btn"
-              onClick={handleChangeShip}
-              style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-              CHANGE SHIP
-            </button>
+            <div className="menu-buttons">
+              <button type="button" className="start-btn" onClick={handleStart}>
+                PLAY AGAIN
+              </button>
+              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
+                CHANGE SHIP
+              </button>
+            </div>
           </div>
         )}
       </div>

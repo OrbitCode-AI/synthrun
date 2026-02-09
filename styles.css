@@ -17,9 +17,16 @@
   pointer-events: auto;
 }
 
+.start-menu {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .title {
   font-size: 4rem;
-  margin: 0;
+  margin: -0.2em 0 2rem;
   background: linear-gradient(180deg, #ff00ff 0%, #00ffff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -40,7 +47,8 @@
   font-family: inherit;
   font-size: 1.5rem;
   font-weight: 900;
-  padding: 1rem 3rem;
+  width: 16rem;
+  padding: 0.9rem 1.25rem;
   background: transparent;
   border: 3px solid #ff6600;
   color: #ff6600;
@@ -57,13 +65,46 @@
   box-shadow: 0 0 30px #ff6600;
 }
 
-.controls {
-  margin-top: 2rem;
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.secondary-btn {
+  font-size: 1rem;
+  border-color: #00ffff;
   color: #00ffff;
-  font-size: 0.9rem;
+  background: transparent;
+}
+
+.secondary-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+}
+
+.controls {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: #00ffff;
+  font-size: 0.75rem;
   font-weight: bold;
-  letter-spacing: 0.2em;
-  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+  letter-spacing: 0.16em;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.resume-hint {
+  position: static;
+  transform: none;
+  margin-top: 1rem;
+  opacity: 0.85;
 }
 
 .score-wrap {
@@ -176,13 +217,20 @@
   }
 }
 
-.music-controls {
+.music-panel {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
   z-index: 100;
+}
+
+.music-controls {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .music-btn {
@@ -206,22 +254,33 @@
 }
 
 .credit {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 10rem;
   color: #ff00ff;
-  font-size: 0.85rem;
-  font-weight: bold;
-  letter-spacing: 0.15em;
-  text-decoration: none;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.5);
-  transition: all 0.3s;
-  z-index: 100;
+  font-size: 0.72rem;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.45);
+  opacity: 0.8;
 }
 
-.credit:hover {
+.ship-info {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 6.2rem;
+  text-align: right;
+  color: #ff00ff;
+  font-family: "Courier New", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+  opacity: 0.85;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.ship-info p {
+  margin: 0.15rem 0;
   color: #00ffff;
-  text-shadow: 0 0 15px #00ffff;
 }
 
 /* Ship Picker styles */
