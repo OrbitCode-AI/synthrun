@@ -4,14 +4,14 @@ import { useMusicKeys } from './Keyboard'
 interface MusicProps {
   playing?: boolean
   command?: string | null
-  onSongChange?: (title: string) => void
 }
 
 // Music player with prev/play-pause/next controls
 // When standalone (preview), shows full UI. When embedded, just the iframe.
-export default function Music({ playing: externalPlaying, command, onSongChange }: MusicProps) {
+export default function Music({ playing: externalPlaying, command }: MusicProps) {
   const [internalPlaying, setInternalPlaying] = useState(true)
   const [internalCommand, setInternalCommand] = useState<string | null>(null)
+  const [songTitle, setSongTitle] = useState('')
   const playing = externalPlaying !== undefined ? externalPlaying : internalPlaying
   const activeCommand = command !== undefined ? command : internalCommand
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -65,9 +65,6 @@ export default function Music({ playing: externalPlaying, command, onSongChange 
   // Subscribe to YouTube player events and emit song title changes.
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      const iframeWindow = iframeRef.current?.contentWindow
-      if (!iframeWindow || event.source !== iframeWindow) return
-
       let payload: unknown = event.data
       if (typeof payload === 'string') {
         try {
@@ -88,12 +85,22 @@ export default function Music({ playing: externalPlaying, command, onSongChange 
       if (typeof title !== 'string' || !title || title === lastSongTitle.current) return
 
       lastSongTitle.current = title
-      onSongChange?.(title)
+      setSongTitle(title)
     }
 
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [onSongChange])
+  }, [])
+
+  // Re-register "listening" periodically because YouTube may ignore initial registration.
+  useEffect(() => {
+    const postListening = () => {
+      iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
+    }
+    postListening()
+    const intervalId = window.setInterval(postListening, 5000)
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const handleIframeLoad = useCallback(() => {
     iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), '*')
@@ -156,6 +163,7 @@ export default function Music({ playing: externalPlaying, command, onSongChange 
           </button>
         </div>
       )}
+      <div className="now-playing-label">♪ {songTitle || 'NOW PLAYING'}</div>
     </>
   )
 }

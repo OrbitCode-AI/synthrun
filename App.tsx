@@ -31,7 +31,7 @@ export default function App() {
   const [paused, setPaused] = useState(false)
   const [musicOn, setMusicOn] = useState(true)
   const [musicCommand, setMusicCommand] = useState<string | null>(null)
-  const [songTitle, setSongTitle] = useState('')
+  const [displayShipName, setDisplayShipName] = useState('')
 
   const skipPrev = useCallback(() => setMusicCommand(`prev-${Date.now()}`), [])
   const skipNext = useCallback(() => setMusicCommand(`next-${Date.now()}`), [])
@@ -75,7 +75,7 @@ export default function App() {
           setVictory(true)
         },
         onPause: setPaused,
-        onShipChange: (ship: ShipConfig) => setSelectedShip(ship),
+        onShipChange: (ship: ShipConfig) => setDisplayShipName(ship.name),
       },
       selectedShip,
       selectedAnim,
@@ -87,6 +87,7 @@ export default function App() {
   const handleShipSelect = (ship: ShipConfig, animIndex: number) => {
     setSelectedShip(ship)
     setSelectedAnim(animIndex)
+    setDisplayShipName(ship.name)
   }
 
   const handleStart = () => {
@@ -104,6 +105,7 @@ export default function App() {
     gameRef.current = null
     setSelectedShip(null)
     setSelectedAnim(-1)
+    setDisplayShipName('')
     setStarted(false)
     setIsNewHighScore(false)
     setGameOver(false)
@@ -134,9 +136,7 @@ export default function App() {
       onKeyDown={handleClick}
       role="presentation"
       style={{ position: 'fixed', inset: 0 }}>
-      {started && (
-        <Music playing={musicOn} command={musicCommand} onSongChange={setSongTitle} />
-      )}
+      {started && <Music playing={musicOn} command={musicCommand} />}
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       <div className="music-panel">
         <div className="music-controls">
@@ -171,10 +171,9 @@ export default function App() {
             ⏭
           </button>
         </div>
-        <div className="credit">♪ {songTitle || 'NOW PLAYING'}</div>
       </div>
       <div className="ship-info">
-        <p>SHIP: {selectedShip.name}</p>
+        <p>SHIP: {displayShipName}</p>
         {highScore > 0 && <p>HIGH SCORE: {highScore}</p>}
       </div>
       <div className="hud">
