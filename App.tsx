@@ -4,6 +4,7 @@
  * Source: https://github.com/akarlsten/cuberun (MIT License)
  */
 import { useEffect, useRef, useState, useCallback } from 'preact/hooks'
+import { useVar } from 'orbitcode'
 import { initializeGame } from './Game'
 import Music from './Music'
 import { useMusicKeys } from './Keyboard'
@@ -23,6 +24,8 @@ export default function App() {
   const [selectedAnim, setSelectedAnim] = useState(-1)
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState(0)
+  const [highScore, setHighScore] = useVar('highScore', 0)
+  const [isNewHighScore, setIsNewHighScore] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -44,6 +47,7 @@ export default function App() {
         if (!started || gameOver || victory) {
           e.preventDefault()
           setStarted(true)
+          setIsNewHighScore(false)
           setGameOver(false)
           setVictory(false)
           setPaused(false)
@@ -85,6 +89,7 @@ export default function App() {
 
   const handleStart = () => {
     setStarted(true)
+    setIsNewHighScore(false)
     setGameOver(false)
     setVictory(false)
     setPaused(false)
@@ -98,12 +103,23 @@ export default function App() {
     setSelectedShip(null)
     setSelectedAnim(-1)
     setStarted(false)
+    setIsNewHighScore(false)
     setGameOver(false)
     setVictory(false)
     setPaused(false)
   }
 
   const handleClick = () => window.focus()
+
+  useEffect(() => {
+    if (!gameOver && !victory) return
+    if (score > highScore) {
+      setHighScore(score)
+      setIsNewHighScore(true)
+      return
+    }
+    setIsNewHighScore(false)
+  }, [gameOver, victory, score, highScore, setHighScore])
 
   // Show ship picker if no ship selected
   if (!selectedShip) {
@@ -166,6 +182,7 @@ export default function App() {
             <p style={{ color: '#00ffff', fontFamily: 'monospace', marginBottom: '1rem' }}>
               Ship: {selectedShip.name}
             </p>
+            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
             <button type="button" className="start-btn" onClick={handleStart}>
               START
             </button>
@@ -179,7 +196,12 @@ export default function App() {
             <p className="controls">WASD move • P pause • Enter start</p>
           </div>
         )}
-        {started && !gameOver && !victory && <div className="score">SCORE: {score}</div>}
+        {started && !gameOver && !victory && (
+          <div className="score-wrap">
+            <div className="score">SCORE: {score}</div>
+            {highScore > 0 && <div className="score-high">HIGH SCORE: {highScore}</div>}
+          </div>
+        )}
         {paused && (
           <div className="menu">
             <h1 className="paused">PAUSED</h1>
@@ -190,6 +212,8 @@ export default function App() {
           <div className="menu">
             <h1 className="game-over">GAME OVER</h1>
             <p className="final-score">SCORE: {score}</p>
+            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
+            {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
             <button type="button" className="start-btn" onClick={handleStart}>
               RETRY
             </button>
@@ -206,6 +230,8 @@ export default function App() {
           <div className="menu">
             <h1 className="victory">VICTORY!</h1>
             <p className="final-score">FINAL SCORE: {score}</p>
+            {highScore > 0 && <p className="high-score">HIGH SCORE: {highScore}</p>}
+            {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
             <button type="button" className="start-btn" onClick={handleStart}>
               PLAY AGAIN
             </button>

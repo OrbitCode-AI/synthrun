@@ -66,15 +66,28 @@
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
-.score {
+.score-wrap {
   position: fixed;
   top: 2rem;
   left: 50%;
   transform: translateX(-50%);
+  text-align: center;
+}
+
+.score {
   font-size: 1.5rem;
   color: #00ffff;
   text-shadow: 0 0 10px #00ffff;
   letter-spacing: 0.2em;
+}
+
+.score-high {
+  margin-top: 0.35rem;
+  font-family: "Orbitron", "Courier New", monospace;
+  font-size: 0.8rem;
+  color: #ff4dff;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+  letter-spacing: 0.18em;
 }
 
 .game-over {
@@ -119,6 +132,39 @@
   font-size: 1.5rem;
   color: #00ffff;
   margin: 1rem 0 2rem;
+}
+
+.high-score {
+  margin: 0 0 1rem;
+  font-family: "Orbitron", "Courier New", monospace;
+  font-size: 1rem;
+  color: #ff4dff;
+  letter-spacing: 0.2em;
+  text-shadow:
+    0 0 8px rgba(255, 0, 255, 0.8),
+    0 0 16px rgba(0, 255, 255, 0.35);
+}
+
+.new-high-score {
+  margin: 0 0 1.5rem;
+  font-family: "Orbitron", "Courier New", monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 0.24em;
+  text-shadow:
+    0 0 8px rgba(255, 215, 0, 0.8),
+    0 0 18px rgba(255, 255, 120, 0.75);
+  animation: highScorePulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes highScorePulse {
+  from {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+  }
+  to {
+    filter: drop-shadow(0 0 18px rgba(255, 255, 120, 0.95));
+  }
 }
 
 @keyframes glow {
