@@ -280,15 +280,17 @@
   max-width: 400px;
   overflow: hidden;
   white-space: nowrap;
+  display: flex;
 }
 
 .now-playing-label span {
   display: inline-block;
-  animation: marquee 15s linear infinite;
+  padding-right: 2rem;
+  animation: marquee 12s linear infinite;
 }
 
 @keyframes marquee {
-  0% { transform: translateX(100%); }
+  0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
 

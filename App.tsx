@@ -3,11 +3,10 @@
  * Original: https://cuberun.adamkarlsten.com/
  * Source: https://github.com/akarlsten/cuberun (MIT License)
  */
-import { useEffect, useRef, useState, useCallback } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { useVar } from 'orbitcode'
 import { initializeGame } from './Game'
 import Music from './Music'
-import { useMusicKeys } from './Keyboard'
 import ShipPicker from './ShipPicker'
 import type { ShipConfig } from './Ships'
 import './styles.css'
@@ -29,16 +28,7 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
   const [paused, setPaused] = useState(false)
-  const [musicOn, setMusicOn] = useState(true)
-  const [musicCommand, setMusicCommand] = useState<string | null>(null)
   const [displayShipName, setDisplayShipName] = useState('')
-
-  const skipPrev = useCallback(() => setMusicCommand(`prev-${Date.now()}`), [])
-  const skipNext = useCallback(() => setMusicCommand(`next-${Date.now()}`), [])
-  const toggleMusic = useCallback(() => setMusicOn(m => !m), [])
-
-  // Music keyboard shortcuts (j=prev, k=play/pause, l=next)
-  useMusicKeys({ onPrev: skipPrev, onToggle: toggleMusic, onNext: skipNext })
 
   // Enter key to start/restart when menu is showing
   useEffect(() => {
@@ -136,42 +126,8 @@ export default function App() {
       onKeyDown={handleClick}
       role="presentation"
       style={{ position: 'fixed', inset: 0 }}>
-      <Music playing={started && musicOn} command={started ? musicCommand : null} />
+      <Music playing={started} />
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
-      <div className="music-panel">
-        <div className="music-controls">
-          <button
-            type="button"
-            className="music-btn"
-            onClick={e => {
-              e.stopPropagation()
-              skipPrev()
-            }}
-            title="Previous track (J)">
-            ⏮
-          </button>
-          <button
-            type="button"
-            className="music-btn"
-            onClick={e => {
-              e.stopPropagation()
-              toggleMusic()
-            }}
-            title={musicOn ? 'Pause (K)' : 'Play (K)'}>
-            {musicOn ? '⏸' : '▶'}
-          </button>
-          <button
-            type="button"
-            className="music-btn"
-            onClick={e => {
-              e.stopPropagation()
-              skipNext()
-            }}
-            title="Next track (L)">
-            ⏭
-          </button>
-        </div>
-      </div>
       <div className="ship-info">
         {highScore > 0 && <p>HIGH SCORE: {highScore}</p>}
         <p>SHIP: {displayShipName}</p>
