@@ -76,12 +76,13 @@ export default function Game() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const clock = new THREE.Clock()
+    const timer = new THREE.Timer()
     let animationId: number
 
     function animate() {
-      const delta = clock.getDelta()
-      const time = clock.getElapsedTime()
+      timer.update()
+      const delta = timer.getDelta()
+      const time = timer.getElapsed()
 
       // Animate scene elements
       stars.rotation.y += delta * 0.01
@@ -347,12 +348,13 @@ export const initializeGame = (
   window.addEventListener('resize', onResize)
 
   // Animation loop
-  const clock = new THREE.Clock()
+  const timer = new THREE.Timer()
   let animationId: number
 
   function animate() {
-    const delta = clock.getDelta()
-    const time = clock.getElapsedTime()
+    timer.update()
+    const delta = timer.getDelta()
+    const time = timer.getElapsed()
 
     stars.rotation.y += delta * 0.01
     sun.update(time)
@@ -522,7 +524,7 @@ export const initializeGame = (
       cameraY = 1.5
       camera.position.y = cameraY
       // Initialize obstacle state with level 1
-      const startTime = clock.getElapsedTime()
+      const startTime = timer.getElapsed()
       obstacleState = createObstacleState(startTime)
       speed = getLevelSpeed(1)
       currentLevel = 1

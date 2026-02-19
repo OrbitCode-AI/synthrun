@@ -80,12 +80,13 @@ export default function Scene() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const clock = new THREE.Clock()
+    const timer = new THREE.Timer()
     let animationId: number
 
     function animate() {
-      const delta = clock.getDelta()
-      const time = clock.getElapsedTime()
+      timer.update()
+      const delta = timer.getDelta()
+      const time = timer.getElapsed()
 
       // Scroll ground
       gridTexture.offset.y += delta * 0.5

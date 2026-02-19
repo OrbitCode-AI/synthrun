@@ -171,11 +171,12 @@ export default function Sun() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const clock = new THREE.Clock()
+    const timer = new THREE.Timer()
     let animationId: number
 
     function animate() {
-      const time = clock.getElapsedTime()
+      timer.update()
+      const time = timer.getElapsed()
       sun.update(time)
       renderer.render(scene, camera)
       animationId = requestAnimationFrame(animate)

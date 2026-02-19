@@ -45,11 +45,12 @@ export default function Obstacles() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const clock = new THREE.Clock()
+    const timer = new THREE.Timer()
     let animationId: number
 
     function animate() {
-      const delta = clock.getDelta()
+      timer.update()
+      const delta = timer.getDelta()
 
       // Update distance traveled (speed * 15 matches cube movement)
       const distanceDelta = delta * speed * 15

@@ -151,12 +151,13 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const clock = new THREE.Clock()
+    const timer = new THREE.Timer()
     let animationId: number
 
     const animate = () => {
-      const delta = clock.getDelta()
-      const time = clock.getElapsedTime()
+      timer.update()
+      const delta = timer.getDelta()
+      const time = timer.getElapsed()
 
       // Update spinning lights
       for (const light of lights) {
