@@ -1,8 +1,5 @@
-import * as THREE from 'three'
+import * as three from './three'
 import { useEffect, useRef } from 'react'
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { createGround, createHorizon, createStars, applySceneConfig, SCENE_CONFIG } from './Scene'
 import { createSun } from './Sun'
 import { createShip } from './Ship'
@@ -19,7 +16,7 @@ import {
   type ObstacleState,
 } from './Obstacles'
 
-// Standalone preview - auto-playing THREE.js demo using shared components
+// Standalone preview - auto-playing js demo using shared components
 export default function Game() {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -27,23 +24,23 @@ export default function Game() {
     if (!containerRef.current) return
 
     // Scene setup - same as initializeGame
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
+    const scene = new three.Scene()
+    const camera = new three.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
     camera.position.set(0, 1, 5)
     camera.lookAt(0, 0, -10)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new three.WebGLRenderer({ antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     applySceneConfig(scene, renderer)
     containerRef.current.appendChild(renderer.domElement)
 
     // Post-processing bloom (controlled by SCENE_CONFIG)
-    const composer = new EffectComposer(renderer)
-    composer.addPass(new RenderPass(scene, camera))
+    const composer = new three.EffectComposer(renderer)
+    composer.addPass(new three.RenderPass(scene, camera))
     if (SCENE_CONFIG.bloomEnabled) {
       composer.addPass(
-        new UnrealBloomPass(
-          new THREE.Vector2(window.innerWidth, window.innerHeight),
+        new three.UnrealBloomPass(
+          new three.Vector2(window.innerWidth, window.innerHeight),
           SCENE_CONFIG.bloomStrength,
           SCENE_CONFIG.bloomRadius,
           SCENE_CONFIG.bloomThreshold,
@@ -59,7 +56,7 @@ export default function Game() {
     const { ship, shipLight } = createShip(scene)
 
     // Auto-pilot game state
-    const cubes: THREE.Object3D[] = []
+    const cubes: three.Object3D[] = []
     let velocity = 0
     let speed = 0.5
     let gridOffset = 0
@@ -76,7 +73,7 @@ export default function Game() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const timer = new THREE.Timer()
+    const timer = new three.Timer()
     let animationId: number
 
     function animate() {
@@ -185,12 +182,12 @@ export const initializeGame = (
   animationIndex = -1,
 ) => {
   // Scene setup
-  const scene = new THREE.Scene()
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
+  const scene = new three.Scene()
+  const camera = new three.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
   camera.position.set(0, 1, 5)
   camera.lookAt(0, 0, -10)
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true })
+  const renderer = new three.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
   applySceneConfig(scene, renderer)
   renderer.domElement.tabIndex = 0
@@ -198,12 +195,12 @@ export const initializeGame = (
   container.appendChild(renderer.domElement)
 
   // Post-processing bloom (controlled by SCENE_CONFIG)
-  const composer = new EffectComposer(renderer)
-  composer.addPass(new RenderPass(scene, camera))
+  const composer = new three.EffectComposer(renderer)
+  composer.addPass(new three.RenderPass(scene, camera))
   if (SCENE_CONFIG.bloomEnabled) {
     composer.addPass(
-      new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
+      new three.UnrealBloomPass(
+        new three.Vector2(window.innerWidth, window.innerHeight),
         SCENE_CONFIG.bloomStrength,
         SCENE_CONFIG.bloomRadius,
         SCENE_CONFIG.bloomThreshold,
@@ -229,13 +226,13 @@ export const initializeGame = (
 
   // Add directional light from above/behind to brighten the ship
   const overheadIntensity = initialShipConfig.overheadLightIntensity ?? 0.8
-  const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
+  const overheadLight = new three.DirectionalLight(0xffffff, overheadIntensity)
   overheadLight.position.set(0, 10, 10) // Above and behind
   overheadLight.target = ship // Always point at ship
   scene.add(overheadLight)
 
   // Game state
-  const cubes: THREE.Mesh[] = []
+  const cubes: three.Mesh[] = []
   let velocity = 0
   let speed = 0
   let gridOffset = 0
@@ -261,9 +258,9 @@ export const initializeGame = (
   let currentShipIndex = shipConfig ? SHIPS.findIndex(s => s.id === shipConfig.id) : 0
   if (currentShipIndex < 0) currentShipIndex = 0
   let currentAnimIndex = animationIndex
-  let animations: THREE.AnimationClip[] = []
-  let currentMixer: THREE.AnimationMixer | null = null
-  let currentAction: THREE.AnimationAction | null = null
+  let animations: three.AnimationClip[] = []
+  let currentMixer: three.AnimationMixer | null = null
+  let currentAction: three.AnimationAction | null = null
 
   // Helper to change ship during gameplay
   const changeShip = (index: number) => {
@@ -348,7 +345,7 @@ export const initializeGame = (
   window.addEventListener('resize', onResize)
 
   // Animation loop
-  const timer = new THREE.Timer()
+  const timer = new three.Timer()
   let animationId: number
 
   function animate() {

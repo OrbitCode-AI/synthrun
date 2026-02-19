@@ -1,7 +1,7 @@
 /**
  * Obstacle generation with level progression and funnel patterns
  */
-import * as THREE from 'three'
+import * as three from './three'
 import { useEffect, useRef } from 'react'
 import { applySceneConfig } from './Scene'
 
@@ -13,18 +13,18 @@ export default function Obstacles() {
     if (!containerRef.current) return
 
     // Scene setup
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
+    const scene = new three.Scene()
+    const camera = new three.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
     camera.position.set(0, 2, 5)
     camera.lookAt(0, 0, -10)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new three.WebGLRenderer({ antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     applySceneConfig(scene, renderer)
     containerRef.current.appendChild(renderer.domElement)
 
     // Ground plane for reference
-    const gridHelper = new THREE.GridHelper(100, 50, 0x333333, 0x222222)
+    const gridHelper = new three.GridHelper(100, 50, 0x333333, 0x222222)
     scene.add(gridHelper)
 
     // Obstacle state - accelerated distance for demo (~10 sec levels)
@@ -32,7 +32,7 @@ export default function Obstacles() {
     const DEMO_FUNNEL_DISTANCE = 20 // Shorter funnel for demo
     const DEMO_SPAWN_INTERVAL = 5
     const DEMO_FUNNEL_SPAWN_INTERVAL = 2
-    const cubes: THREE.Mesh[] = []
+    const cubes: three.Mesh[] = []
     const state = createObstacleState(0)
     let speed = getLevelSpeed(1)
 
@@ -45,7 +45,7 @@ export default function Obstacles() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const timer = new THREE.Timer()
+    const timer = new three.Timer()
     let animationId: number
 
     function animate() {
@@ -196,10 +196,10 @@ export function getLevelSpeed(level: number): number {
 /**
  * Create a single obstacle cube
  */
-export function createObstacle(scene: THREE.Scene, x: number, color: number): THREE.Mesh {
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
+export function createObstacle(scene: three.Scene, x: number, color: number): three.Mesh {
+  const cube = new three.Mesh(
+    new three.BoxGeometry(1, 1, 1),
+    new three.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
   )
   cube.position.set(x, 0.5, -40)
   cube.userData.passed = false
@@ -212,12 +212,12 @@ export function createObstacle(scene: THREE.Scene, x: number, color: number): TH
  * Returns array of new obstacles and updated state
  */
 export function spawnObstacles(
-  scene: THREE.Scene,
+  scene: three.Scene,
   state: ObstacleState,
   delta: number,
   currentSpeed: number,
-): { obstacles: THREE.Mesh[]; newState: ObstacleState; newSpeed: number } {
-  const obstacles: THREE.Mesh[] = []
+): { obstacles: three.Mesh[]; newState: ObstacleState; newSpeed: number } {
+  const obstacles: three.Mesh[] = []
   const newState = { ...state }
   let newSpeed = currentSpeed
 
@@ -286,8 +286,8 @@ export function spawnObstacles(
  * Returns score delta and whether any collision occurred
  */
 export function updateObstacles(
-  scene: THREE.Scene,
-  cubes: THREE.Mesh[],
+  scene: three.Scene,
+  cubes: three.Mesh[],
   shipX: number,
   delta: number,
   speed: number,
@@ -325,7 +325,7 @@ export function updateObstacles(
 /**
  * Clear all obstacles from scene
  */
-export function clearObstacles(scene: THREE.Scene, cubes: THREE.Mesh[]) {
+export function clearObstacles(scene: three.Scene, cubes: three.Mesh[]) {
   for (const c of cubes) {
     scene.remove(c)
   }

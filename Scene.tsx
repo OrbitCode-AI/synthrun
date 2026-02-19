@@ -1,8 +1,5 @@
-import * as THREE from 'three'
+import * as three from './three'
 import { useEffect, useRef } from 'react'
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { createSun } from './Sun'
 
 // ============================================================================
@@ -22,17 +19,17 @@ export const SCENE_CONFIG = {
   bloomThreshold: 0.1,
 }
 
-// Apply scene config to a THREE.js scene and renderer
-export function applySceneConfig(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
+// Apply scene config to a js scene and renderer
+export function applySceneConfig(scene: three.Scene, renderer: three.WebGLRenderer) {
   renderer.setClearColor(SCENE_CONFIG.clearColor)
   if (SCENE_CONFIG.fogEnabled) {
-    scene.fog = new THREE.Fog(SCENE_CONFIG.fogColor, SCENE_CONFIG.fogNear, SCENE_CONFIG.fogFar)
+    scene.fog = new three.Fog(SCENE_CONFIG.fogColor, SCENE_CONFIG.fogNear, SCENE_CONFIG.fogFar)
   }
 }
 
 // ============================================================================
 
-// Standalone preview - animated synthwave scene using shared THREE.js components
+// Standalone preview - animated synthwave scene using shared js components
 export default function Scene() {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -41,23 +38,23 @@ export default function Scene() {
     if (!container) return
 
     // Scene setup
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
+    const scene = new three.Scene()
+    const camera = new three.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150)
     camera.position.set(0, 2, 5)
     camera.lookAt(0, 0, -10)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new three.WebGLRenderer({ antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     applySceneConfig(scene, renderer)
     container.appendChild(renderer.domElement)
 
     // Post-processing bloom (controlled by SCENE_CONFIG)
-    const composer = new EffectComposer(renderer)
-    composer.addPass(new RenderPass(scene, camera))
+    const composer = new three.EffectComposer(renderer)
+    composer.addPass(new three.RenderPass(scene, camera))
     if (SCENE_CONFIG.bloomEnabled) {
       composer.addPass(
-        new UnrealBloomPass(
-          new THREE.Vector2(window.innerWidth, window.innerHeight),
+        new three.UnrealBloomPass(
+          new three.Vector2(window.innerWidth, window.innerHeight),
           SCENE_CONFIG.bloomStrength,
           SCENE_CONFIG.bloomRadius,
           SCENE_CONFIG.bloomThreshold,
@@ -80,7 +77,7 @@ export default function Scene() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const timer = new THREE.Timer()
+    const timer = new three.Timer()
     let animationId: number
 
     function animate() {
@@ -132,8 +129,8 @@ function createGridTexture(color = '#ff00ff') {
     ctx.lineTo(i * 32, 512)
     ctx.stroke()
   }
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  const texture = new three.CanvasTexture(canvas)
+  texture.wrapS = texture.wrapT = three.RepeatWrapping
   texture.repeat.set(30, 30)
   return texture
 }
@@ -144,9 +141,9 @@ function hexToColor(hex: number): string {
 }
 
 // Create scrolling ground plane - returns object with texture and setColor function
-export function createGround(scene: THREE.Scene) {
-  const material = new THREE.MeshBasicMaterial({ map: createGridTexture() })
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), material)
+export function createGround(scene: three.Scene) {
+  const material = new three.MeshBasicMaterial({ map: createGridTexture() })
+  const ground = new three.Mesh(new three.PlaneGeometry(100, 100), material)
   ground.rotation.x = -Math.PI / 2
   // @ts-ignore - renderOrder exists on Object3D
   ground.renderOrder = 1 // Render after sun so it occludes it
@@ -166,9 +163,9 @@ export function createGround(scene: THREE.Scene) {
 }
 
 // Create horizon line - returns object with setColor function
-export function createHorizon(scene: THREE.Scene) {
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ffff })
-  const horizon = new THREE.Mesh(new THREE.PlaneGeometry(200, 0.5), material)
+export function createHorizon(scene: three.Scene) {
+  const material = new three.MeshBasicMaterial({ color: 0x00ffff })
+  const horizon = new three.Mesh(new three.PlaneGeometry(200, 0.5), material)
   horizon.rotation.x = -Math.PI / 2
   horizon.position.set(0, 0.01, -40)
   scene.add(horizon)
@@ -181,18 +178,18 @@ export function createHorizon(scene: THREE.Scene) {
 }
 
 // Create starfield (reduced count for less visual noise)
-export function createStars(scene: THREE.Scene) {
-  const starsGeom = new THREE.BufferGeometry()
+export function createStars(scene: three.Scene) {
+  const starsGeom = new three.BufferGeometry()
   const starData = []
   for (let i = 0; i < 2000; i++) {
     starData.push((Math.random() - 0.5) * 200)
     starData.push(Math.random() * 40 + 5)
     starData.push((Math.random() - 0.5) * 200 - 20)
   }
-  starsGeom.setAttribute('position', new THREE.Float32BufferAttribute(starData, 3))
-  const stars = new THREE.Points(
+  starsGeom.setAttribute('position', new three.Float32BufferAttribute(starData, 3))
+  const stars = new three.Points(
     starsGeom,
-    new THREE.PointsMaterial({ size: 0.15, color: 0xffffff }),
+    new three.PointsMaterial({ size: 0.15, color: 0xffffff }),
   )
   scene.add(stars)
   return stars

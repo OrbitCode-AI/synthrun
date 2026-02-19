@@ -1,13 +1,12 @@
 /**
  * Sun.tsx - Animated sun with shader-based solar flares
  */
-import * as THREE from 'three'
+import * as three from './three'
 import { useEffect, useRef } from 'react'
 
 // Create sun with animated solar flares
-export function createSun(scene: THREE.Scene) {
-  // @ts-ignore - ShaderMaterial available at runtime
-  const sunMaterial = new THREE.ShaderMaterial({
+export function createSun(scene: three.Scene) {
+  const sunMaterial = new three.ShaderMaterial({
     transparent: true,
     depthWrite: false, // Don't write to depth buffer (transparent)
     uniforms: {
@@ -123,7 +122,7 @@ export function createSun(scene: THREE.Scene) {
   })
 
   // Larger plane so flares don't get truncated
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), sunMaterial)
+  const sun = new three.Mesh(new three.PlaneGeometry(60, 60), sunMaterial)
   sun.position.set(0, 6, -50)
   // @ts-ignore - renderOrder exists on Object3D
   sun.renderOrder = -1 // Render before ground so ground occludes it
@@ -147,14 +146,14 @@ export default function Sun() {
     if (!container) return
 
     // Simple scene - just the sun on black
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x000000)
+    const scene = new three.Scene()
+    scene.background = new three.Color(0x000000)
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200)
+    const camera = new three.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200)
     camera.position.set(0, 0, 30)
     camera.lookAt(0, 0, 0)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new three.WebGLRenderer({ antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     container.appendChild(renderer.domElement)
 
@@ -171,7 +170,7 @@ export default function Sun() {
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const timer = new THREE.Timer()
+    const timer = new three.Timer()
     let animationId: number
 
     function animate() {

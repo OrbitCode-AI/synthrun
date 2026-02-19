@@ -3,7 +3,7 @@
  * Uses Lightbox to display ships with spinning lights
  * Controls: WASD/Arrows to fly, [/] to cycle ships, 1-8 for direct select, M for anims, Enter to confirm
  */
-import * as THREE from 'three'
+import * as three from './three'
 import { useRef, useState, useEffect, useCallback } from 'preact/hooks'
 import Lightbox from './Lightbox'
 import { SHIPS, loadShipModel, type ShipConfig } from './Ships'
@@ -33,17 +33,17 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
       : 0
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [animationName, setAnimationName] = useState<string | null>(null)
-  const shipGroupRef = useRef<THREE.Group | null>(null)
-  const shipLightRef = useRef<THREE.PointLight | null>(null)
-  const overheadLightRef = useRef<THREE.DirectionalLight | null>(null)
+  const shipGroupRef = useRef<three.Group | null>(null)
+  const shipLightRef = useRef<three.PointLight | null>(null)
+  const overheadLightRef = useRef<three.DirectionalLight | null>(null)
   const keysRef = useRef({ left: false, right: false, up: false, down: false })
   const velocityRef = useRef({ x: 0, y: 0 })
 
   // Animation state
   const animStateRef = useRef({
-    animations: [] as THREE.AnimationClip[],
-    mixer: null as THREE.AnimationMixer | null,
-    currentAction: null as THREE.AnimationAction | null,
+    animations: [] as three.AnimationClip[],
+    mixer: null as three.AnimationMixer | null,
+    currentAction: null as three.AnimationAction | null,
     currentIndex: -1,
   })
 
@@ -133,9 +133,9 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     }
   }, [currentIndex])
 
-  const handleSetup = useCallback(({ scene }: { scene: THREE.Scene }) => {
+  const handleSetup = useCallback(({ scene }: { scene: three.Scene }) => {
     // Create ship group
-    const shipGroup = new THREE.Group()
+    const shipGroup = new three.Group()
     scene.add(shipGroup)
     shipGroupRef.current = shipGroup
 
@@ -148,7 +148,7 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
 
     // Add overhead directional light (same as Game.tsx)
     const overheadIntensity = firstShip.overheadLightIntensity ?? 0.8
-    const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
+    const overheadLight = new three.DirectionalLight(0xffffff, overheadIntensity)
     overheadLight.position.set(0, 10, 10)
     overheadLight.target = shipGroup
     scene.add(overheadLight)

@@ -1,9 +1,7 @@
 /**
  * Ship model configurations
  */
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import * as three from './three'
 
 // Default export for preview
 export default function ShipsConfig() {
@@ -199,8 +197,8 @@ let dracoLoader: any = null
 
 function getLoader() {
   if (!gltfLoader) {
-    gltfLoader = new GLTFLoader()
-    dracoLoader = new DRACOLoader()
+    gltfLoader = new three.GLTFLoader()
+    dracoLoader = new three.DRACOLoader()
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/')
     gltfLoader.setDRACOLoader(dracoLoader)
   }
@@ -208,17 +206,17 @@ function getLoader() {
 }
 
 export interface LoadedShipModel {
-  model: THREE.Object3D
-  animations: THREE.AnimationClip[]
-  mixer: THREE.AnimationMixer | null
+  model: three.Object3D
+  animations: three.AnimationClip[]
+  mixer: three.AnimationMixer | null
 }
 
 /**
- * Load a ship model into a THREE.Group
+ * Load a ship model into a Group
  */
 export function loadShipModel(
   config: ShipConfig,
-  group: THREE.Group,
+  group: three.Group,
   usePreviewScale = false,
   onLoad?: (result: LoadedShipModel) => void,
 ) {
@@ -250,7 +248,7 @@ export function loadShipModel(
 
       // Create mixer if there are animations
       const animations = gltf.animations || []
-      const mixer = animations.length > 0 ? new THREE.AnimationMixer(model) : null
+      const mixer = animations.length > 0 ? new three.AnimationMixer(model) : null
 
       onLoad?.({ model, animations, mixer })
     },

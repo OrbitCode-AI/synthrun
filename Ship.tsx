@@ -1,7 +1,7 @@
 /**
  * Ship preview, shared utilities, and game ship creation
  */
-import * as THREE from 'three'
+import * as three from './three'
 import { useRef, useCallback, useState } from 'preact/hooks'
 import { SHIP_KEYS } from './Keyboard'
 import Lightbox from './Lightbox'
@@ -29,24 +29,24 @@ export const MOVEMENT = {
 // ============================================================================
 
 // Create fallback cone geometry (shown while model loads)
-export function createFallbackCone(preview = false): THREE.Mesh {
+export function createFallbackCone(preview = false): three.Mesh {
   const material = preview
-    ? new THREE.MeshStandardMaterial({
+    ? new three.MeshStandardMaterial({
         color: 0xffffff,
         emissive: 0x001111,
         metalness: 1.0,
         roughness: 0.1,
       })
-    : new THREE.MeshBasicMaterial({ color: 0x00ffff })
-  const fallback = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1, 8), material)
+    : new three.MeshBasicMaterial({ color: 0x00ffff })
+  const fallback = new three.Mesh(new three.ConeGeometry(0.3, 1, 8), material)
   fallback.rotation.x = preview ? -Math.PI / 2 : Math.PI / 2
   return fallback
 }
 
 // Create ship glow light with config-based intensity
-export function createShipLight(config: ShipConfig, scene: THREE.Scene): THREE.PointLight {
+export function createShipLight(config: ShipConfig, scene: three.Scene): three.PointLight {
   const intensity = config.shipLightIntensity ?? 2.0
-  const light = new THREE.PointLight(0xff00ff, intensity, 5)
+  const light = new three.PointLight(0xff00ff, intensity, 5)
   light.position.set(0, 0, 0)
   scene.add(light)
   return light
@@ -70,7 +70,7 @@ export function updateMovement(
 
 // Apply position and tilt to ship
 export function applyMovement(
-  ship: THREE.Group,
+  ship: three.Group,
   velocity: { x: number; y: number },
   delta: number,
   baseRotationY = 0,
@@ -100,9 +100,9 @@ export function applyMovement(
 // ============================================================================
 
 export interface AnimationState {
-  animations: THREE.AnimationClip[]
-  mixer: THREE.AnimationMixer | null
-  currentAction: THREE.AnimationAction | null
+  animations: three.AnimationClip[]
+  mixer: three.AnimationMixer | null
+  currentAction: three.AnimationAction | null
   currentIndex: number
 }
 
@@ -147,9 +147,9 @@ export function cycleAnimation(state: AnimationState, forward: boolean): string 
 
 // Standalone preview - single ship that flies around
 export default function Ship() {
-  const shipGroupRef = useRef<THREE.Group | null>(null)
-  const shipLightRef = useRef<THREE.PointLight | null>(null)
-  const overheadLightRef = useRef<THREE.DirectionalLight | null>(null)
+  const shipGroupRef = useRef<three.Group | null>(null)
+  const shipLightRef = useRef<three.PointLight | null>(null)
+  const overheadLightRef = useRef<three.DirectionalLight | null>(null)
   const keysRef = useRef({ left: false, right: false, up: false, down: false })
   const velocityRef = useRef({ x: 0, y: 0 })
   const [animationName, setAnimationName] = useState<string | null>(null)
@@ -166,9 +166,9 @@ export default function Ship() {
   const shipConfig = SHIPS[PREVIEW_SHIP_INDEX]
 
   const handleSetup = useCallback(
-    ({ scene }: { scene: THREE.Scene }) => {
+    ({ scene }: { scene: three.Scene }) => {
       // Create ship group - rotated to face away from camera
-      const ship = new THREE.Group()
+      const ship = new three.Group()
       ship.rotation.y = Math.PI
       scene.add(ship)
       shipGroupRef.current = ship
@@ -182,7 +182,7 @@ export default function Ship() {
 
       // Overhead directional light (same as ShipPicker and Game)
       const overheadIntensity = shipConfig.overheadLightIntensity ?? 0.8
-      const overheadLight = new THREE.DirectionalLight(0xffffff, overheadIntensity)
+      const overheadLight = new three.DirectionalLight(0xffffff, overheadIntensity)
       overheadLight.position.set(0, 10, 10)
       overheadLight.target = ship
       scene.add(overheadLight)
@@ -278,19 +278,19 @@ export default function Ship() {
 
 // Create player ship with glow light for the game
 export function createShip(
-  scene: THREE.Scene,
+  scene: three.Scene,
   shipConfig?: ShipConfig,
   animationIndex = -1,
   onLoad?: (result: {
-    animations: THREE.AnimationClip[]
-    mixer: THREE.AnimationMixer | null
-    action: THREE.AnimationAction | null
+    animations: three.AnimationClip[]
+    mixer: three.AnimationMixer | null
+    action: three.AnimationAction | null
   }) => void,
 ) {
   const config = shipConfig || SHIPS[0]
 
   // Create a group to hold the ship
-  const ship = new THREE.Group()
+  const ship = new three.Group()
   ship.position.set(0, 0.3, 3)
   scene.add(ship)
 
@@ -298,12 +298,12 @@ export function createShip(
   ship.add(createFallbackCone(false))
 
   // Mixer reference to be set when model loads
-  let mixer: THREE.AnimationMixer | null = null
+  let mixer: three.AnimationMixer | null = null
 
   // Load the ship model and set up animation
   loadShipModel(config, ship, false, result => {
     mixer = result.mixer
-    let action: THREE.AnimationAction | null = null
+    let action: three.AnimationAction | null = null
     if (mixer && animationIndex >= 0 && result.animations[animationIndex]) {
       action = mixer.clipAction(result.animations[animationIndex])
       action.play()

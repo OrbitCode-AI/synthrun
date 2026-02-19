@@ -2,7 +2,7 @@
  * Lightbox - 3D object viewer with spinning colored lights
  * Renders a subject (e.g. ship model) with orbiting light orbs
  */
-import * as THREE from 'three'
+import * as three from './three'
 import { useEffect, useRef } from 'react'
 import { SCENE_CONFIG } from './Scene'
 
@@ -77,10 +77,10 @@ export interface LightboxProps {
 }
 
 export interface LightboxContext {
-  scene: THREE.Scene
-  camera: THREE.PerspectiveCamera
-  renderer: THREE.WebGLRenderer
-  lights: THREE.PointLight[]
+  scene: three.Scene
+  camera: three.PerspectiveCamera
+  renderer: three.WebGLRenderer
+  lights: three.PointLight[]
 }
 
 export default function Lightbox({ config = {}, onSetup, onAnimate, children }: LightboxProps) {
@@ -92,13 +92,13 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
     if (!containerRef.current) return
 
     // Scene setup
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(cfg.backgroundColor)
+    const scene = new three.Scene()
+    scene.background = new three.Color(cfg.backgroundColor)
     if (SCENE_CONFIG.fogEnabled) {
-      scene.fog = new THREE.Fog(cfg.fogColor, cfg.fogNear, cfg.fogFar)
+      scene.fog = new three.Fog(cfg.fogColor, cfg.fogNear, cfg.fogFar)
     }
 
-    const camera = new THREE.PerspectiveCamera(
+    const camera = new three.PerspectiveCamera(
       cfg.cameraFov,
       window.innerWidth / window.innerHeight,
       0.1,
@@ -107,21 +107,21 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
     camera.position.set(...cfg.cameraPosition)
     camera.lookAt(...cfg.cameraLookAt)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new three.WebGLRenderer({ antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.domElement.tabIndex = 0
     renderer.domElement.style.outline = 'none'
     containerRef.current.appendChild(renderer.domElement)
 
     // Ambient light
-    const ambientLight = new THREE.AmbientLight(cfg.ambientColor, cfg.ambientIntensity)
+    const ambientLight = new three.AmbientLight(cfg.ambientColor, cfg.ambientIntensity)
     scene.add(ambientLight)
 
     // Spinning colored lights with visible orbs
-    const lights: THREE.PointLight[] = []
+    const lights: three.PointLight[] = []
     for (let i = 0; i < cfg.numLights; i++) {
       const color = cfg.lightColors[i % cfg.lightColors.length]
-      const light = new THREE.PointLight(color, cfg.lightIntensity, cfg.lightDistance)
+      const light = new three.PointLight(color, cfg.lightIntensity, cfg.lightDistance)
       light.userData.angle = (i / cfg.numLights) * Math.PI * 2
       light.userData.radius = cfg.lightRadius
       light.userData.speed = 1.5 + (i % 3) * 0.3 // ~3-5 sec per revolution
@@ -129,9 +129,9 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
       scene.add(light)
 
       // Add visible glowing orb at light position
-      const orb = new THREE.Mesh(
-        new THREE.SphereGeometry(cfg.orbSize, 8, 8),
-        new THREE.MeshBasicMaterial({ color }),
+      const orb = new three.Mesh(
+        new three.SphereGeometry(cfg.orbSize, 8, 8),
+        new three.MeshBasicMaterial({ color }),
       )
       light.add(orb)
       lights.push(light)
@@ -151,7 +151,7 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
     window.addEventListener('resize', onResize)
 
     // Animation loop
-    const timer = new THREE.Timer()
+    const timer = new three.Timer()
     let animationId: number
 
     const animate = () => {
