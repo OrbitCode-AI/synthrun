@@ -141,6 +141,18 @@ export function cycleAnimation(state: AnimationState, forward: boolean): string 
   return playAnimation(state, newIndex)
 }
 
+// Apply direction key state from a keyboard event
+export function applyDirectionKeyState(
+  e: KeyboardEvent,
+  keys: { left: boolean; right: boolean; up: boolean; down: boolean },
+  state: boolean,
+): void {
+  if (SHIP_KEYS.left.includes(e.key)) keys.left = state
+  if (SHIP_KEYS.right.includes(e.key)) keys.right = state
+  if (SHIP_KEYS.up.includes(e.key)) keys.up = state
+  if (SHIP_KEYS.down.includes(e.key)) keys.down = state
+}
+
 // ============================================================================
 // SHIP PREVIEW COMPONENT
 // ============================================================================
@@ -198,13 +210,7 @@ export default function Ship() {
       // Keyboard controls
       const keys = keysRef.current
       const onKeyDown = (e: KeyboardEvent) => {
-        // Movement
-        if (SHIP_KEYS.left.includes(e.key)) keys.left = true
-        if (SHIP_KEYS.right.includes(e.key)) keys.right = true
-        if (SHIP_KEYS.up.includes(e.key)) keys.up = true
-        if (SHIP_KEYS.down.includes(e.key)) keys.down = true
-
-        // Animation cycling
+        applyDirectionKeyState(e, keys, true)
         if (e.key === 'm' || e.key === 'M') {
           const name = cycleAnimation(animStateRef.current, true)
           setAnimationName(name)
@@ -212,10 +218,7 @@ export default function Ship() {
         }
       }
       const onKeyUp = (e: KeyboardEvent) => {
-        if (SHIP_KEYS.left.includes(e.key)) keys.left = false
-        if (SHIP_KEYS.right.includes(e.key)) keys.right = false
-        if (SHIP_KEYS.up.includes(e.key)) keys.up = false
-        if (SHIP_KEYS.down.includes(e.key)) keys.down = false
+        applyDirectionKeyState(e, keys, false)
       }
       window.addEventListener('keydown', onKeyDown)
       window.addEventListener('keyup', onKeyUp)

@@ -7,13 +7,13 @@ import * as three from './three'
 import { useRef, useState, useEffect, useCallback } from 'preact/hooks'
 import Lightbox from './Lightbox'
 import { SHIPS, loadShipModel, type ShipConfig } from './Ships'
-import { SHIP_KEYS } from './Keyboard'
 import {
   createFallbackCone,
   createShipLight,
   updateMovement,
   applyMovement,
   cycleAnimation,
+  applyDirectionKeyState,
 } from './Ship'
 import './styles.css'
 
@@ -57,42 +57,32 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
     if (!currentShip) return
     const keys = keysRef.current
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Number keys 1-8 for direct selection
+    const handleShipSelection = (e: KeyboardEvent) => {
       const num = Number.parseInt(e.key, 10)
       if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
         setCurrentIndex(num - 1)
-        return
+        return true
       }
+      if (e.key === '[') setCurrentIndex(i => (i - 1 + SHIPS.length) % SHIPS.length)
+      else if (e.key === ']') setCurrentIndex(i => (i + 1) % SHIPS.length)
+      else if (e.key === 'Enter') onSelect(currentShip, animStateRef.current.currentIndex)
+      return false
+    }
 
-      // [/] for previous/next ship
-      if (e.key === '[') {
-        setCurrentIndex(i => (i - 1 + SHIPS.length) % SHIPS.length)
-      } else if (e.key === ']') {
-        setCurrentIndex(i => (i + 1) % SHIPS.length)
-      } else if (e.key === 'Enter') {
-        onSelect(currentShip, animStateRef.current.currentIndex)
-      }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (handleShipSelection(e)) return
 
-      // M for animation cycling (using shared utility)
       if (e.key === 'm' || e.key === 'M') {
         const name = cycleAnimation(animStateRef.current, true)
         setAnimationName(name)
         if (name) setTimeout(() => setAnimationName(null), 2000)
       }
 
-      // WASD/Arrow movement
-      if (SHIP_KEYS.left.includes(e.key)) keys.left = true
-      if (SHIP_KEYS.right.includes(e.key)) keys.right = true
-      if (SHIP_KEYS.up.includes(e.key)) keys.up = true
-      if (SHIP_KEYS.down.includes(e.key)) keys.down = true
+      applyDirectionKeyState(e, keys, true)
     }
 
     const onKeyUp = (e: KeyboardEvent) => {
-      if (SHIP_KEYS.left.includes(e.key)) keys.left = false
-      if (SHIP_KEYS.right.includes(e.key)) keys.right = false
-      if (SHIP_KEYS.up.includes(e.key)) keys.up = false
-      if (SHIP_KEYS.down.includes(e.key)) keys.down = false
+      applyDirectionKeyState(e, keys, false)
     }
 
     window.addEventListener('keydown', onKeyDown)

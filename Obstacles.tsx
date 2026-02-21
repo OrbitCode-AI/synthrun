@@ -46,54 +46,38 @@ export default function Obstacles() {
 
     // Animation loop
     const timer = new three.Timer()
-    let animationId: number
-
-    function animate() {
-      timer.update()
-      const delta = timer.getDelta()
-
-      // Update distance traveled (speed * 15 matches cube movement)
-      const distanceDelta = delta * speed * 15
-      state.distance += distanceDelta
-
-      // Spawn obstacles based on distance
-      const phaseDistance = state.distance - state.phaseStartDistance
-      const color = getLevelColor(state.level)
-
-      if (state.phase === 'normal') {
-        if (phaseDistance >= DEMO_LEVEL_DISTANCE) {
-          state.phase = 'funnel'
-          state.phaseStartDistance = state.distance
-          state.funnelProgress = 0
-          state.nextSpawnDistance = state.distance
-        } else if (state.distance >= state.nextSpawnDistance) {
-          const x = (Math.random() - 0.5) * 16
-          cubes.push(createObstacle(scene, x, color))
-          state.nextSpawnDistance = state.distance + DEMO_SPAWN_INTERVAL
-        }
-      } else {
-        state.funnelProgress = phaseDistance / DEMO_FUNNEL_DISTANCE
-        if (phaseDistance >= DEMO_FUNNEL_DISTANCE) {
-          state.level = (state.level % LEVEL_COLORS.length) + 1
-          state.phase = 'normal'
-          state.phaseStartDistance = state.distance
-          state.funnelProgress = 0
-          state.nextSpawnDistance = state.distance + DEMO_SPAWN_INTERVAL
-          speed = getLevelSpeed(state.level)
-        } else if (state.distance >= state.nextSpawnDistance) {
-          const FULL_WIDTH = 8
-          const MIN_GAP = 2.4
-          const gapHalf = FULL_WIDTH - state.funnelProgress * (FULL_WIDTH - MIN_GAP / 2)
-          for (let x = -FULL_WIDTH; x <= FULL_WIDTH; x += 1.5) {
-            if (x < -gapHalf || x > gapHalf) {
-              cubes.push(createObstacle(scene, x, color))
-            }
-          }
-          state.nextSpawnDistance = state.distance + DEMO_FUNNEL_SPAWN_INTERVAL
-        }
+    // Handle normal phase spawning
+    const updateNormalPhase = (phaseDistance: number, color: number) => {
+      if (phaseDistance >= DEMO_LEVEL_DISTANCE) {
+        state.phase = 'funnel'
+        state.phaseStartDistance = state.distance
+        state.funnelProgress = 0
+        state.nextSpawnDistance = state.distance
+      } else if (state.distance >= state.nextSpawnDistance) {
+        const x = (Math.random() - 0.5) * 16
+        cubes.push(createObstacle(scene, x, color))
+        state.nextSpawnDistance = state.distance + DEMO_SPAWN_INTERVAL
       }
+    }
 
-      // Update cubes
+    // Handle funnel phase spawning
+    const updateFunnelPhase = (phaseDistance: number, color: number) => {
+      state.funnelProgress = phaseDistance / DEMO_FUNNEL_DISTANCE
+      if (phaseDistance >= DEMO_FUNNEL_DISTANCE) {
+        state.level = (state.level % LEVEL_COLORS.length) + 1
+        state.phase = 'normal'
+        state.phaseStartDistance = state.distance
+        state.funnelProgress = 0
+        state.nextSpawnDistance = state.distance + DEMO_SPAWN_INTERVAL
+        speed = getLevelSpeed(state.level)
+      } else if (state.distance >= state.nextSpawnDistance) {
+        spawnFunnelWalls(scene, cubes, state.funnelProgress, color)
+        state.nextSpawnDistance = state.distance + DEMO_FUNNEL_SPAWN_INTERVAL
+      }
+    }
+
+    // Move and clean up cubes
+    const updateDemoCubes = (delta: number) => {
       for (let i = cubes.length - 1; i >= 0; i--) {
         const cube = cubes[i]
         cube.position.z += delta * speed * 15
@@ -104,6 +88,25 @@ export default function Obstacles() {
           cubes.splice(i, 1)
         }
       }
+    }
+
+    let animationId: number
+
+    function animate() {
+      timer.update()
+      const delta = timer.getDelta()
+
+      // Update distance traveled (speed * 15 matches cube movement)
+      state.distance += delta * speed * 15
+
+      // Spawn obstacles based on distance
+      const phaseDistance = state.distance - state.phaseStartDistance
+      const color = getLevelColor(state.level)
+
+      if (state.phase === 'normal') updateNormalPhase(phaseDistance, color)
+      else updateFunnelPhase(phaseDistance, color)
+
+      updateDemoCubes(delta)
 
       renderer.render(scene, camera)
       animationId = requestAnimationFrame(animate)
@@ -194,6 +197,26 @@ export function getLevelSpeed(level: number): number {
 }
 
 /**
+ * Spawn funnel wall obstacles with a center gap based on progress
+ */
+function spawnFunnelWalls(
+  scene: three.Scene,
+  target: three.Mesh[],
+  progress: number,
+  color: number,
+): void {
+  const FULL_WIDTH = 8
+  const MIN_GAP = 2.4
+  const gapHalf = FULL_WIDTH - progress * (FULL_WIDTH - MIN_GAP / 2)
+  const cubeSpacing = 1.5
+  for (let x = -FULL_WIDTH; x <= FULL_WIDTH; x += cubeSpacing) {
+    if (x < -gapHalf || x > gapHalf) {
+      target.push(createObstacle(scene, x, color))
+    }
+  }
+}
+
+/**
  * Create a single obstacle cube
  */
 export function createObstacle(scene: three.Scene, x: number, color: number): three.Mesh {
@@ -229,27 +252,21 @@ export function spawnObstacles(
   const color = getLevelColor(state.level)
 
   if (state.phase === 'normal') {
-    // Check if it's time to start funnel
     if (phaseDistance >= LEVEL_DISTANCE) {
       newState.phase = 'funnel'
       newState.phaseStartDistance = newState.distance
       newState.funnelProgress = 0
       newState.nextSpawnDistance = newState.distance
     } else if (newState.distance >= state.nextSpawnDistance) {
-      // Random spawn across full width
       const x = (Math.random() - 0.5) * 16
       obstacles.push(createObstacle(scene, x, color))
       newState.nextSpawnDistance =
         newState.distance + SPAWN_INTERVAL + Math.random() * SPAWN_INTERVAL
-      // Gradually increase speed during normal phase
       newSpeed = Math.min(getLevelSpeed(state.level) + 0.5, currentSpeed + 0.01)
     }
   } else {
-    // Funnel phase
     newState.funnelProgress = phaseDistance / FUNNEL_DISTANCE
-
     if (phaseDistance >= FUNNEL_DISTANCE) {
-      // End funnel, start new level
       newState.level = state.level + 1
       newState.phase = 'normal'
       newState.phaseStartDistance = newState.distance
@@ -257,23 +274,7 @@ export function spawnObstacles(
       newState.nextSpawnDistance = newState.distance + SPAWN_INTERVAL
       newSpeed = getLevelSpeed(newState.level)
     } else if (newState.distance >= state.nextSpawnDistance) {
-      // Spawn funnel pattern - walls that close in toward center
-      const progress = newState.funnelProgress
-
-      // Gap narrows from full width to 3x ship width (2.4)
-      const FULL_WIDTH = 8 // ±8 = 16 total playable width
-      const MIN_GAP = 2.4 // 3x ship collision width (0.8)
-      const gapHalf = FULL_WIDTH - progress * (FULL_WIDTH - MIN_GAP / 2)
-
-      // Spawn cubes on left and right walls
-      const cubeSpacing = 1.5
-      for (let x = -FULL_WIDTH; x <= FULL_WIDTH; x += cubeSpacing) {
-        // Skip the center gap
-        if (x < -gapHalf || x > gapHalf) {
-          obstacles.push(createObstacle(scene, x, color))
-        }
-      }
-
+      spawnFunnelWalls(scene, obstacles, newState.funnelProgress, color)
       newState.nextSpawnDistance = newState.distance + FUNNEL_SPAWN_INTERVAL
     }
   }

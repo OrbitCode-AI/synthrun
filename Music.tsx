@@ -1,6 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useMusicKeys } from './Keyboard'
 
+// Extract song title from YouTube player message payload
+function extractSongTitle(data: unknown): string | null {
+  let payload = data
+  if (typeof payload === 'string') {
+    try {
+      payload = JSON.parse(payload)
+    } catch {
+      return null
+    }
+  }
+  if (!payload || typeof payload !== 'object') return null
+  const info = (payload as { info?: unknown }).info
+  if (!info || typeof info !== 'object') return null
+  const videoData = (info as { videoData?: unknown }).videoData
+  if (!videoData || typeof videoData !== 'object') return null
+  const title = (videoData as { title?: unknown }).title
+  return typeof title === 'string' && title ? title : null
+}
+
 interface MusicProps {
   playing?: boolean
 }
@@ -66,25 +85,8 @@ export default function Music({ playing: externalPlaying }: MusicProps) {
   // Subscribe to YouTube player events and emit song title changes.
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      let payload: unknown = event.data
-      if (typeof payload === 'string') {
-        try {
-          payload = JSON.parse(payload)
-        } catch {
-          return
-        }
-      }
-      if (!payload || typeof payload !== 'object') return
-
-      const info = (payload as { info?: unknown }).info
-      if (!info || typeof info !== 'object') return
-
-      const videoData = (info as { videoData?: unknown }).videoData
-      if (!videoData || typeof videoData !== 'object') return
-
-      const title = (videoData as { title?: unknown }).title
-      if (typeof title !== 'string' || !title || title === lastSongTitle.current) return
-
+      const title = extractSongTitle(event.data)
+      if (!title || title === lastSongTitle.current) return
       lastSongTitle.current = title
       setSongTitle(title)
     }

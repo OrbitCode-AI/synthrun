@@ -72,6 +72,25 @@ export default function Game() {
     }
     window.addEventListener('resize', onResize)
 
+    // Update auto-pilot cubes (movement, scoring, cleanup)
+    const updateDemoCubes = (delta: number, currentSpeed: number) => {
+      for (let i = cubes.length - 1; i >= 0; i--) {
+        const cube = cubes[i]
+        cube.position.z += delta * currentSpeed * 15
+        cube.rotation.x += delta
+        cube.rotation.y += delta * 0.5
+
+        if (!cube.userData.passed && cube.position.z > 4) {
+          cube.userData.passed = true
+          _score += 10
+        }
+        if (cube.position.z > 10) {
+          scene.remove(cube)
+          cubes.splice(i, 1)
+        }
+      }
+    }
+
     // Animation loop
     const timer = new three.Timer()
     let animationId: number
@@ -117,23 +136,7 @@ export default function Game() {
         speed = Math.min(3, speed + 0.01)
       }
 
-      // Update cubes
-      for (let i = cubes.length - 1; i >= 0; i--) {
-        const cube = cubes[i]
-        cube.position.z += delta * speed * 15
-        cube.rotation.x += delta
-        cube.rotation.y += delta * 0.5
-
-        if (!cube.userData.passed && cube.position.z > 4) {
-          cube.userData.passed = true
-          _score += 10
-        }
-
-        if (cube.position.z > 10) {
-          scene.remove(cube)
-          cubes.splice(i, 1)
-        }
-      }
+      updateDemoCubes(delta, speed)
 
       composer.render()
       animationId = requestAnimationFrame(animate)
@@ -296,6 +299,26 @@ export const initializeGame = (
     }
   }
 
+  // Apply directional key state from event
+  const applyDirectionKeys = (e: KeyboardEvent, state: boolean) => {
+    if (SHIP_KEYS.left.includes(e.key)) keys.left = state
+    if (SHIP_KEYS.right.includes(e.key)) keys.right = state
+    if (SHIP_KEYS.up.includes(e.key)) keys.up = state
+    if (SHIP_KEYS.down.includes(e.key)) keys.down = state
+  }
+
+  // Handle ship selection keys (number keys, brackets, animation)
+  const handleShipKeys = (e: KeyboardEvent) => {
+    const num = Number.parseInt(e.key, 10)
+    if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
+      changeShip(num - 1)
+      return
+    }
+    if (e.key === '[') changeShip((currentShipIndex - 1 + SHIPS.length) % SHIPS.length)
+    else if (e.key === ']') changeShip((currentShipIndex + 1) % SHIPS.length)
+    else if (e.key === 'm' || e.key === 'M') cycleAnimation()
+  }
+
   // Keyboard controls using shared key mappings
   const onKeyDown = (e: KeyboardEvent) => {
     // P to pause/unpause during gameplay
@@ -305,32 +328,11 @@ export const initializeGame = (
       return
     }
 
-    if (SHIP_KEYS.left.includes(e.key)) keys.left = true
-    if (SHIP_KEYS.right.includes(e.key)) keys.right = true
-    if (SHIP_KEYS.up.includes(e.key)) keys.up = true
-    if (SHIP_KEYS.down.includes(e.key)) keys.down = true
-
-    // 1-8 for direct ship selection
-    const num = Number.parseInt(e.key, 10)
-    if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
-      changeShip(num - 1)
-      return
-    }
-
-    // [/] to change ships, M to cycle animations
-    if (e.key === '[') {
-      changeShip((currentShipIndex - 1 + SHIPS.length) % SHIPS.length)
-    } else if (e.key === ']') {
-      changeShip((currentShipIndex + 1) % SHIPS.length)
-    } else if (e.key === 'm' || e.key === 'M') {
-      cycleAnimation()
-    }
+    applyDirectionKeys(e, true)
+    handleShipKeys(e)
   }
   const onKeyUp = (e: KeyboardEvent) => {
-    if (SHIP_KEYS.left.includes(e.key)) keys.left = false
-    if (SHIP_KEYS.right.includes(e.key)) keys.right = false
-    if (SHIP_KEYS.up.includes(e.key)) keys.up = false
-    if (SHIP_KEYS.down.includes(e.key)) keys.down = false
+    applyDirectionKeys(e, false)
   }
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
@@ -343,6 +345,124 @@ export const initializeGame = (
     composer.setSize(window.innerWidth, window.innerHeight)
   }
   window.addEventListener('resize', onResize)
+
+  // Celebration spin animation update
+  const updateCelebrationSpin = (time: number) => {
+    const spinProgress = (time - spinStartTime) / SPIN_DURATION
+    if (spinProgress >= 1) {
+      isSpinning = false
+      ship.rotation.x = 0
+      ship.rotation.y = spinStartRotation.y
+      ship.rotation.z = 0
+      return
+    }
+    // Smooth easing (ease-in-out)
+    const eased =
+      spinProgress < 0.5
+        ? 2 * spinProgress * spinProgress
+        : 1 - (-2 * spinProgress + 2) ** 2 / 2
+    const spinAngle = eased * Math.PI * 2 * spinDirection
+    if (spinAxis === 'x') {
+      ship.rotation.x = spinStartRotation.x + spinAngle
+    } else {
+      ship.rotation.y = spinStartRotation.y + spinAngle
+    }
+  }
+
+  // Handle level change (victory or celebration)
+  const handleLevelChange = (time: number) => {
+    if (currentLevel > 6) {
+      isVictory = true
+      victoryStartTime = time
+      clearObstacles(scene, cubes)
+      velocity = 0
+    } else {
+      const levelColor = getLevelColor(currentLevel)
+      ground.setColor(levelColor)
+      horizon.setColor(levelColor)
+      shipLight.color.setHex(levelColor)
+      isSpinning = true
+      spinStartTime = time
+      const axes: Array<'x' | 'y'> = ['x', 'y']
+      spinAxis = axes[Math.floor(Math.random() * 2)]
+      spinDirection = Math.random() < 0.5 ? 1 : -1
+      spinStartRotation = { x: ship.rotation.x, y: ship.rotation.y, z: ship.rotation.z }
+    }
+  }
+
+  // Update gameplay state (movement, obstacles, collisions)
+  const updateGameplay = (delta: number, time: number) => {
+    gridOffset += delta * speed * 3
+    ground.offset.y = gridOffset
+
+    // Ship movement
+    const accel = delta * 35
+    if (keys.left && !keys.right) velocity = Math.max(-8, velocity - accel)
+    else if (keys.right && !keys.left) velocity = Math.min(8, velocity + accel)
+    else velocity *= 0.92
+
+    ship.position.x += velocity * delta
+    ship.position.x = Math.max(-8, Math.min(8, ship.position.x))
+    ship.rotation.z = -velocity * 0.08
+
+    if (isSpinning) updateCelebrationSpin(time)
+
+    shipLight.position.copy(ship.position)
+    camera.position.x = ship.position.x * 0.9
+
+    // Camera vertical movement
+    if (keys.up) cameraY = Math.min(8, cameraY + delta * 3)
+    if (keys.down) cameraY = Math.max(1, cameraY - delta * 3)
+    camera.position.y = cameraY
+    camera.position.z = 5 + (cameraY - 2) * 0.5
+    camera.lookAt(ship.position.x * 0.9, 0, -10)
+
+    if (currentMixer) currentMixer.update(delta)
+
+    // Spawn obstacles and check level changes
+    if (obstacleState) {
+      const result = spawnObstacles(scene, obstacleState, delta, speed)
+      cubes.push(...result.obstacles)
+      obstacleState = result.newState
+      speed = result.newSpeed
+
+      if (obstacleState.level !== currentLevel) {
+        currentLevel = obstacleState.level
+        handleLevelChange(time)
+      }
+    }
+
+    // Check collisions
+    const collision = updateObstacles(scene, cubes, ship.position.x, delta, speed, scoreDelta => {
+      scoreValue += scoreDelta
+      callbacks.onScore?.(scoreValue)
+    })
+    if (collision) {
+      isGameOver = true
+      callbacks.onGameOver?.()
+    }
+  }
+
+  // Victory animation - ship spins and flies into space
+  const updateVictoryAnimation = (delta: number, time: number) => {
+    const victoryProgress = (time - victoryStartTime) / VICTORY_DURATION
+    if (victoryProgress >= 1) {
+      callbacks.onVictory?.(scoreValue)
+      return
+    }
+    ship.rotation.y += delta * Math.PI * (2 + victoryProgress * 4)
+    ship.position.y += delta * (2 + victoryProgress * 15)
+    ship.position.z -= delta * (5 + victoryProgress * 20)
+    ship.rotation.x = -victoryProgress * 0.5
+
+    camera.position.y = 1 + ship.position.y * 0.5
+    camera.position.z = ship.position.z + 8
+    camera.lookAt(ship.position)
+
+    shipLight.color.setRGB(1, 1, 1)
+    shipLight.intensity = 3 + victoryProgress * 5
+    shipLight.position.copy(ship.position)
+  }
 
   // Animation loop
   const timer = new three.Timer()
@@ -357,143 +477,8 @@ export const initializeGame = (
     sun.update(time)
     sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
-    if (isStarted && !isGameOver && !isPaused) {
-      // Scroll ground
-      gridOffset += delta * speed * 3
-      ground.offset.y = gridOffset
-
-      // Ship movement - snappier acceleration and more dramatic tilt
-      const accel = delta * 35
-      if (keys.left && !keys.right) velocity = Math.max(-8, velocity - accel)
-      else if (keys.right && !keys.left) velocity = Math.min(8, velocity + accel)
-      else velocity *= 0.92
-
-      ship.position.x += velocity * delta
-      ship.position.x = Math.max(-8, Math.min(8, ship.position.x))
-      ship.rotation.z = -velocity * 0.08
-
-      // Celebration spin animation
-      if (isSpinning) {
-        const spinProgress = (time - spinStartTime) / SPIN_DURATION
-        if (spinProgress >= 1) {
-          isSpinning = false
-          // Restore to pre-spin rotation (don't override ship's configured gameRotation)
-          ship.rotation.x = 0
-          ship.rotation.y = spinStartRotation.y
-          ship.rotation.z = 0
-        } else {
-          // Smooth easing (ease-in-out)
-          const eased =
-            spinProgress < 0.5
-              ? 2 * spinProgress * spinProgress
-              : 1 - (-2 * spinProgress + 2) ** 2 / 2
-          const spinAngle = eased * Math.PI * 2 * spinDirection // Full 360° rotation
-          // Apply spin on the chosen axis (x = flip, y = spin)
-          if (spinAxis === 'x') {
-            ship.rotation.x = spinStartRotation.x + spinAngle
-          } else {
-            ship.rotation.y = spinStartRotation.y + spinAngle
-          }
-        }
-      }
-
-      shipLight.position.copy(ship.position)
-      camera.position.x = ship.position.x * 0.9
-
-      // Camera vertical movement - move back and tilt down as camera rises
-      if (keys.up) cameraY = Math.min(8, cameraY + delta * 3)
-      if (keys.down) cameraY = Math.max(1, cameraY - delta * 3)
-      camera.position.y = cameraY
-      // Move camera back as it goes up (base z=5, max z=8 at max height)
-      camera.position.z = 5 + (cameraY - 2) * 0.5
-      // Look at a point ahead but low enough to keep ship visible
-      camera.lookAt(ship.position.x * 0.9, 0, -10)
-
-      // Update animation mixer
-      if (currentMixer) currentMixer.update(delta)
-
-      // Spawn obstacles using level system (distance-based)
-      if (obstacleState) {
-        const result = spawnObstacles(scene, obstacleState, delta, speed)
-        cubes.push(...result.obstacles)
-        obstacleState = result.newState
-        speed = result.newSpeed
-
-        // Update scene colors when level changes
-        if (obstacleState.level !== currentLevel) {
-          currentLevel = obstacleState.level
-
-          // Victory! Completed all 6 levels (level 7+ means victory)
-          if (currentLevel > 6) {
-            isVictory = true
-            victoryStartTime = time
-            clearObstacles(scene, cubes)
-            // Center ship for takeoff
-            velocity = 0
-          } else {
-            const levelColor = getLevelColor(currentLevel)
-            ground.setColor(levelColor)
-            horizon.setColor(levelColor)
-            shipLight.color.setHex(levelColor)
-            // Start celebration spin
-            isSpinning = true
-            spinStartTime = time
-            const axes: Array<'x' | 'y'> = ['x', 'y']
-            spinAxis = axes[Math.floor(Math.random() * 2)]
-            spinDirection = Math.random() < 0.5 ? 1 : -1
-            spinStartRotation = { x: ship.rotation.x, y: ship.rotation.y, z: ship.rotation.z }
-          }
-        }
-      }
-
-      // Update obstacles and check for collisions
-      const collision = updateObstacles(scene, cubes, ship.position.x, delta, speed, scoreDelta => {
-        scoreValue += scoreDelta
-        callbacks.onScore?.(scoreValue)
-      })
-
-      if (collision) {
-        isGameOver = true
-        callbacks.onGameOver?.()
-      }
-    }
-
-    // Victory animation - ship spins and flies into space
-    if (isVictory) {
-      const victoryProgress = (time - victoryStartTime) / VICTORY_DURATION
-
-      if (victoryProgress < 1) {
-        // Spin faster over time (up to 3 revolutions per second)
-        const spinSpeed = 2 + victoryProgress * 4
-        ship.rotation.y += delta * Math.PI * spinSpeed
-
-        // Fly upward with increasing speed
-        const liftSpeed = 2 + victoryProgress * 15
-        ship.position.y += delta * liftSpeed
-
-        // Move forward (away from camera)
-        ship.position.z -= delta * (5 + victoryProgress * 20)
-
-        // Tilt up slightly as we take off
-        ship.rotation.x = -victoryProgress * 0.5
-
-        // Camera follows ship with smooth tracking
-        camera.position.y = 1 + ship.position.y * 0.5
-        camera.position.z = ship.position.z + 8
-        camera.lookAt(ship.position)
-
-        // Fade ship light to white as we ascend
-        const r = 1
-        const g = 1
-        const b = 1
-        shipLight.color.setRGB(r, g, b)
-        shipLight.intensity = 3 + victoryProgress * 5
-        shipLight.position.copy(ship.position)
-      } else {
-        // Victory complete - call callback
-        callbacks.onVictory?.(scoreValue)
-      }
-    }
+    if (isStarted && !isGameOver && !isPaused) updateGameplay(delta, time)
+    if (isVictory) updateVictoryAnimation(delta, time)
 
     composer.render()
     animationId = requestAnimationFrame(animate)
