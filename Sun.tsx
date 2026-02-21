@@ -124,7 +124,7 @@ export function createSun(scene: three.Scene) {
   // Larger plane so flares don't get truncated
   const sun = new three.Mesh(new three.PlaneGeometry(60, 60), sunMaterial)
   sun.position.set(0, 6, -50)
-  // @ts-ignore - renderOrder exists on Object3D
+  // @ts-expect-error - renderOrder exists on Object3D
   sun.renderOrder = -1 // Render before ground so ground occludes it
   scene.add(sun)
 

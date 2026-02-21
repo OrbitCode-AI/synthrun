@@ -311,7 +311,7 @@ export const initializeGame = (
     if (SHIP_KEYS.down.includes(e.key)) keys.down = true
 
     // 1-8 for direct ship selection
-    const num = Number.parseInt(e.key)
+    const num = Number.parseInt(e.key, 10)
     if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
       changeShip(num - 1)
       return

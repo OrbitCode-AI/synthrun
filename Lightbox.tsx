@@ -87,7 +87,6 @@ export default function Lightbox({ config = {}, onSetup, onAnimate, children }: 
   const containerRef = useRef<HTMLDivElement>(null)
   const cfg = { ...defaultConfig, ...config }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Three.js setup runs once on mount
   useEffect(() => {
     if (!containerRef.current) return
 

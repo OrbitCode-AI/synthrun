@@ -145,7 +145,7 @@ export function createGround(scene: three.Scene) {
   const material = new three.MeshBasicMaterial({ map: createGridTexture() })
   const ground = new three.Mesh(new three.PlaneGeometry(100, 100), material)
   ground.rotation.x = -Math.PI / 2
-  // @ts-ignore - renderOrder exists on Object3D
+  // @ts-expect-error - renderOrder exists on Object3D
   ground.renderOrder = 1 // Render after sun so it occludes it
   scene.add(ground)
 

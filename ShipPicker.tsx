@@ -59,7 +59,7 @@ export default function ShipPicker({ onSelect, initialShipId }: ShipPickerProps)
 
     const onKeyDown = (e: KeyboardEvent) => {
       // Number keys 1-8 for direct selection
-      const num = Number.parseInt(e.key)
+      const num = Number.parseInt(e.key, 10)
       if (num >= 1 && num <= Math.min(8, SHIPS.length)) {
         setCurrentIndex(num - 1)
         return
