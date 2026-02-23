@@ -254,8 +254,15 @@ export const initializeGame = (
   let spinStartRotation = { x: 0, y: 0, z: 0 }
   const SPIN_DURATION = 2 // seconds for celebration spin
   const keys = { left: false, right: false, up: false, down: false }
-  let cameraY = 1.5 // Base camera height (slightly raised for better obstacle visibility)
   let obstacleState: ObstacleState | null = null
+
+  // Jump physics
+  const JUMP_VELOCITY = 8.5 // Initial upward velocity
+  const GRAVITY = 18 // Gravity pulling ship down
+  const GROUND_Y = 0.3 // Ship resting Y position
+  let jumpVelocityY = 0
+  let isJumping = false
+  let canJump = true // Prevent holding W to repeatedly jump
 
   // Ship/animation state for in-game switching
   let currentShipIndex = shipConfig ? SHIPS.findIndex(s => s.id === shipConfig.id) : 0
@@ -395,7 +402,7 @@ export const initializeGame = (
     gridOffset += delta * speed * 3
     ground.offset.y = gridOffset
 
-    // Ship movement
+    // Ship horizontal movement
     const accel = delta * 35
     if (keys.left && !keys.right) velocity = Math.max(-8, velocity - accel)
     else if (keys.right && !keys.left) velocity = Math.min(8, velocity + accel)
@@ -405,17 +412,38 @@ export const initializeGame = (
     ship.position.x = Math.max(-8, Math.min(8, ship.position.x))
     ship.rotation.z = -velocity * 0.08
 
+    // Jump physics (W/Up to jump)
+    if (keys.up && !isJumping && canJump) {
+      isJumping = true
+      canJump = false
+      jumpVelocityY = JUMP_VELOCITY
+    }
+    // Prevent re-jump while holding W
+    if (!keys.up) canJump = true
+
+    if (isJumping) {
+      jumpVelocityY -= GRAVITY * delta
+      ship.position.y += jumpVelocityY * delta
+      // Tilt nose up while rising, down while falling
+      ship.rotation.x = -jumpVelocityY * 0.02
+      if (ship.position.y <= GROUND_Y) {
+        ship.position.y = GROUND_Y
+        isJumping = false
+        jumpVelocityY = 0
+        ship.rotation.x = 0
+      }
+    }
+
     if (isSpinning) updateCelebrationSpin(time)
 
     shipLight.position.copy(ship.position)
     camera.position.x = ship.position.x * 0.9
 
-    // Camera vertical movement
-    if (keys.up) cameraY = Math.min(8, cameraY + delta * 3)
-    if (keys.down) cameraY = Math.max(1, cameraY - delta * 3)
-    camera.position.y = cameraY
-    camera.position.z = 5 + (cameraY - 2) * 0.5
-    camera.lookAt(ship.position.x * 0.9, 0, -10)
+    // Camera follows ship vertically (smoothly)
+    const targetCamY = 1.5 + (ship.position.y - GROUND_Y) * 0.5
+    camera.position.y += (targetCamY - camera.position.y) * 5 * delta
+    camera.position.z = 5
+    camera.lookAt(ship.position.x * 0.9, ship.position.y * 0.3, -10)
 
     if (currentMixer) currentMixer.update(delta)
 
@@ -432,8 +460,8 @@ export const initializeGame = (
       }
     }
 
-    // Check collisions
-    const collision = updateObstacles(scene, cubes, ship.position.x, delta, speed, scoreDelta => {
+    // Check collisions (pass ship Y for jump-aware collision)
+    const collision = updateObstacles(scene, cubes, ship.position.x, ship.position.y, delta, speed, scoreDelta => {
       scoreValue += scoreDelta
       callbacks.onScore?.(scoreValue)
     })
@@ -497,14 +525,17 @@ export const initializeGame = (
       isSpinning = false
       scoreValue = 0
       velocity = 0
+      jumpVelocityY = 0
+      isJumping = false
+      canJump = true
       ship.position.x = 0
+      ship.position.y = GROUND_Y
       ship.rotation.x = 0
       ship.rotation.z = 0
       // Don't touch rotation.y - it's set by loadShipModel based on ship config
       shipLight.position.copy(ship.position)
       camera.position.x = 0
-      cameraY = 1.5
-      camera.position.y = cameraY
+      camera.position.y = 1.5
       // Initialize obstacle state with level 1
       const startTime = timer.getElapsed()
       obstacleState = createObstacleState(startTime)

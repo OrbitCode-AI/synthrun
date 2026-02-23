@@ -152,7 +152,7 @@ export default function App() {
           </div>
         )}
         {(!started || paused || gameOver || victory) && (
-          <p className="controls">WASD move • P pause • Enter start</p>
+          <p className="controls">AD move • W jump • P pause • Enter start</p>
         )}
         {paused && (
           <div className="menu">

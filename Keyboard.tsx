@@ -117,8 +117,8 @@ export default function Keyboard() {
         <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center' }}>
           <div>
             <h3 style={{ color: '#ff6600' }}>Movement</h3>
-            <p style={rowStyle(SHIP_KEYS.up)}>W / ↑ - Up / Zoom</p>
-            <p style={rowStyle(SHIP_KEYS.down)}>S / ↓ - Down / Zoom</p>
+            <p style={rowStyle(SHIP_KEYS.up)}>W / ↑ - Jump</p>
+            <p style={rowStyle(SHIP_KEYS.down)}>S / ↓ - (reserved)</p>
             <p style={rowStyle(SHIP_KEYS.left)}>A / ← - Left</p>
             <p style={rowStyle(SHIP_KEYS.right)}>D / → - Right</p>
           </div>

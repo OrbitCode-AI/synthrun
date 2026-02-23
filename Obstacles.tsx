@@ -217,17 +217,35 @@ function spawnFunnelWalls(
 }
 
 /**
- * Create a single obstacle cube
+ * Height constants for obstacles
  */
-export function createObstacle(scene: three.Scene, x: number, color: number): three.Mesh {
+export const OBSTACLE_GROUND_Y = 0.5 // Ground-level obstacle center Y
+export const OBSTACLE_HIGH_Y = 3.0 // High obstacle center Y (jump height)
+const HIGH_OBSTACLE_CHANCE_BASE = 0.2 // Base chance to spawn high obstacle (increases with level)
+
+/**
+ * Create a single obstacle cube (ground or high)
+ */
+export function createObstacle(scene: three.Scene, x: number, color: number, high = false): three.Mesh {
   const cube = new three.Mesh(
     new three.BoxGeometry(1, 1, 1),
-    new three.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
+    new three.MeshBasicMaterial({ color, transparent: true, opacity: high ? 0.7 : 0.9 }),
   )
-  cube.position.set(x, 0.5, -40)
+  const y = high ? OBSTACLE_HIGH_Y : OBSTACLE_GROUND_Y
+  cube.position.set(x, y, -40)
   cube.userData.passed = false
+  cube.userData.high = high
   scene.add(cube)
   return cube
+}
+
+/**
+ * Determine if a spawned obstacle should be high, based on level
+ */
+export function shouldSpawnHigh(level: number): boolean {
+  // Higher levels = more high obstacles (20% at level 1, up to 45% at level 6)
+  const chance = Math.min(0.45, HIGH_OBSTACLE_CHANCE_BASE + (level - 1) * 0.05)
+  return Math.random() < chance
 }
 
 /**
@@ -259,7 +277,8 @@ export function spawnObstacles(
       newState.nextSpawnDistance = newState.distance
     } else if (newState.distance >= state.nextSpawnDistance) {
       const x = (Math.random() - 0.5) * 16
-      obstacles.push(createObstacle(scene, x, color))
+      const high = shouldSpawnHigh(state.level)
+      obstacles.push(createObstacle(scene, x, color, high))
       newState.nextSpawnDistance =
         newState.distance + SPAWN_INTERVAL + Math.random() * SPAWN_INTERVAL
       newSpeed = Math.min(getLevelSpeed(state.level) + 0.5, currentSpeed + 0.01)
@@ -285,11 +304,13 @@ export function spawnObstacles(
 /**
  * Update existing obstacles (movement, rotation, cleanup)
  * Returns score delta and whether any collision occurred
+ * shipY is the ship's current Y position (for jump collision checks)
  */
 export function updateObstacles(
   scene: three.Scene,
   cubes: three.Mesh[],
   shipX: number,
+  shipY: number,
   delta: number,
   speed: number,
   onScore: (delta: number) => void,
@@ -305,12 +326,15 @@ export function updateObstacles(
     // Score when passed
     if (!cube.userData.passed && cube.position.z > 4) {
       cube.userData.passed = true
-      onScore(10)
+      onScore(cube.userData.high ? 20 : 10) // High obstacles worth more
     }
 
-    // Collision detection
+    // Collision detection - check both X and Y proximity
     if (cube.position.z > 2 && cube.position.z < 4 && Math.abs(cube.position.x - shipX) < 0.8) {
-      collision = true
+      // Check Y collision: ship must be within ~1 unit of obstacle center Y
+      if (Math.abs(cube.position.y - shipY) < 1.2) {
+        collision = true
+      }
     }
 
     // Remove when past camera
