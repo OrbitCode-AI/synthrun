@@ -7,5 +7,5 @@ export { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 export { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 export default function Planet() {
-  return <span style={{ fontSize: '100vmin' }}>🪐</span>
+  return <span style={{ fontSize: '50vmin' }}>🪐</span>
 }
