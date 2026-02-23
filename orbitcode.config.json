@@ -3,5 +3,6 @@
   "description": "3D game with neon grid, bloom effects, and music",
   "icon": "🎮",
   "defaultTheme": "dark",
-  "defaultLayout": "fullscreen"
+  "defaultLayout": "fullscreen",
+  "localProjectIdHash": "0136a4eca1e785909ff0240fbab7f9bd4b63b7442242c47d449f7ee77cd9293b"
 }
