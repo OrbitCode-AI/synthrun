@@ -456,6 +456,8 @@ export const initializeGame = (
   }
 
   // Level 1: camera altitude control (ship at ground, up/down moves camera)
+  // alt=0 matches the original 9920bf9 camera: Y=1.5, Z=5, lookAt(x*0.9, y*0.3, -10)
+  // alt=1 is bird's-eye: Y=4.5, Z=8, lookAt further ahead
   const updateLevel1Camera = (delta: number) => {
     ship.position.y = GROUND_Y
 
@@ -467,10 +469,9 @@ export const initializeGame = (
     const maxAltitude = obstacleState ? 1.0 - getLevel1Progress(obstacleState) : 1.0
     cameraAltitude = Math.max(0, Math.min(maxAltitude, cameraAltitude))
 
-    // Interpolate camera between over-the-shoulder (alt=0) and bird's-eye (alt=1)
-    const camY = 1.2 + cameraAltitude * (4.5 - 1.2)
-    const camZ = 3.5 + cameraAltitude * (8.0 - 3.5)
-    const lookY = cameraAltitude * 0.5
+    const camY = 1.5 + cameraAltitude * (4.5 - 1.5)
+    const camZ = 5 + cameraAltitude * (8.0 - 5)
+    const lookY = ship.position.y * 0.3 + cameraAltitude * 0.5
     const lookZ = -10 - cameraAltitude * 5
 
     camera.position.x = ship.position.x * 0.9
