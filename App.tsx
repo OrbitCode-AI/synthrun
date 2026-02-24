@@ -12,7 +12,7 @@ import type { ShipConfig } from './Ships'
 import './styles.css'
 
 interface GameInstance {
-  start: (startingMajorLevel?: number, startingSubLevel?: number) => void
+  start: (startingMajorLevel?: number, startingSubLevel?: number, initialScore?: number) => void
   cleanup: () => void
 }
 
@@ -24,7 +24,7 @@ export default function App() {
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useVar('highScore', 0)
-  const [completedLevel, setCompletedLevel] = useVar('completedLevel', { major: 0, sub: 0 })
+  const [completedLevel, setCompletedLevel] = useVar('completedLevel', { major: 0, sub: 0, score: 0 })
   const [isNewHighScore, setIsNewHighScore] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
@@ -63,8 +63,8 @@ export default function App() {
         },
         onPause: setPaused,
         onShipChange: (ship: ShipConfig) => setDisplayShipName(ship.name),
-        onSubLevelComplete: (major: number, sub: number) => {
-          setCompletedLevel({ major, sub })
+        onSubLevelComplete: (major: number, sub: number, s: number) => {
+          setCompletedLevel({ major, sub, score: s })
         },
         onLevelClear: () => {
           setLevelClear(true)
@@ -91,6 +91,7 @@ export default function App() {
     // Resume after the last completed level
     const startMajor = completedLevel.major >= 1 && completedLevel.sub >= 6 ? 2 : 1
     const startSub = startMajor === 1 ? completedLevel.sub + 1 : 1
+    const startScore = completedLevel.score
     setStarted(true)
     setIsNewHighScore(false)
     setGameOver(false)
@@ -98,8 +99,8 @@ export default function App() {
     setPaused(false)
     setLevelClear(false)
     setCurrentMajorLevel(startMajor)
-    setScore(0)
-    gameRef.current?.start(startMajor, startSub)
+    setScore(startScore)
+    gameRef.current?.start(startMajor, startSub, startScore)
   }
 
   const handleChangeShip = () => {

@@ -176,7 +176,7 @@ interface GameCallbacks {
   onVictory?: (score: number) => void
   onPause?: (paused: boolean) => void
   onShipChange?: (ship: ShipConfig) => void
-  onSubLevelComplete?: (majorLevel: number, subLevel: number) => void
+  onSubLevelComplete?: (majorLevel: number, subLevel: number, score: number) => void
   onLevelClear?: () => void
   onLevelClearDone?: () => void
 }
@@ -400,7 +400,7 @@ export const initializeGame = (
       levelClearStartTime = time
       clearObstacles(scene, cubes)
       velocity = 0
-      callbacks.onSubLevelComplete?.(1, 6)
+      callbacks.onSubLevelComplete?.(1, 6, scoreValue)
       callbacks.onLevelClear?.()
     } else if (majorLevel === 2 && obstacleState && obstacleState.majorLevel === 3) {
       // Level 2 complete → actual victory
@@ -421,7 +421,7 @@ export const initializeGame = (
       spinDirection = Math.random() < 0.5 ? 1 : -1
       spinStartRotation = { x: ship.rotation.x, y: ship.rotation.y, z: ship.rotation.z }
       // Notify that previous sub-level was completed (currentLevel is already the new one)
-      callbacks.onSubLevelComplete?.(majorLevel, currentLevel - 1)
+      callbacks.onSubLevelComplete?.(majorLevel, currentLevel - 1, scoreValue)
     }
   }
 
@@ -617,7 +617,7 @@ export const initializeGame = (
   animate()
 
   return {
-    start: (startingMajorLevel = 1, startingSubLevel = 1) => {
+    start: (startingMajorLevel = 1, startingSubLevel = 1, initialScore = 0) => {
       renderer.domElement.focus()
       clearObstacles(scene, cubes)
       isStarted = true
@@ -626,7 +626,8 @@ export const initializeGame = (
       isVictory = false
       isSpinning = false
       isLevelClear = false
-      scoreValue = 0
+      scoreValue = initialScore
+      callbacks.onScore?.(scoreValue)
       velocity = 0
       verticalVelocity = 0
       cameraAltitude = 0
