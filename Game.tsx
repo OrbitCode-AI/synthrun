@@ -268,7 +268,7 @@ export const initializeGame = (
   const LEVEL_CLEAR_DURATION = 3
 
   // Level 1: camera altitude control (0 = over-the-shoulder, 1 = bird's-eye)
-  let cameraAltitude = 1.0
+  let cameraAltitude = 0
   let cameraAltVelocity = 0
   const CAM_ALT_ACCEL = 2.0
   const CAM_ALT_FRICTION = 0.90
@@ -624,7 +624,7 @@ export const initializeGame = (
       scoreValue = 0
       velocity = 0
       verticalVelocity = 0
-      cameraAltitude = 1.0
+      cameraAltitude = 0
       cameraAltVelocity = 0
       ship.position.x = 0
       ship.rotation.x = 0
