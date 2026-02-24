@@ -278,7 +278,7 @@ export const initializeGame = (
   let verticalVelocity = 0
   const VERT_ACCEL = 35
   const VERT_FRICTION = 0.92
-  const LEVEL2_BASE_Y = 3.0
+  const LEVEL2_BASE_Y = 1.5
 
   // Ship/animation state for in-game switching
   let currentShipIndex = shipConfig ? SHIPS.findIndex(s => s.id === shipConfig.id) : 0
@@ -492,7 +492,7 @@ export const initializeGame = (
 
     verticalVelocity = Math.max(-8, Math.min(8, verticalVelocity))
     ship.position.y += verticalVelocity * delta
-    ship.position.y = Math.max(0.5, Math.min(6.0, ship.position.y))
+    ship.position.y = Math.max(0.3, Math.min(2.7, ship.position.y))
     ship.rotation.x = -verticalVelocity * 0.02
 
     const targetCamY = ship.position.y + 0.9

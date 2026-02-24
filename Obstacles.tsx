@@ -158,8 +158,8 @@ const SPAWN_INTERVAL = 5 // Distance between random obstacle spawns (~0.5 sec)
 const FUNNEL_SPAWN_INTERVAL = 2 // Distance between funnel wall spawns
 
 // Level 2 constants
-const LEVEL2_LOW_Y = 1.5 // Low corridor obstacle row
-const LEVEL2_HIGH_Y = 5.0 // High corridor obstacle row
+const LEVEL2_LOW_Y = 0.5 // Same as OBSTACLE_GROUND_Y (Level 1 ground obstacles)
+const LEVEL2_HIGH_Y = 2.5 // New upper row, no safe zone exists between rows
 const LEVEL2_SPAWN_INTERVAL = 3 // Denser than L1's 5-10
 const LEVEL2_DISTANCE = 1500 // World units before funnel/victory
 const LEVEL2_FUNNEL_DISTANCE = 55

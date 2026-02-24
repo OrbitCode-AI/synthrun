@@ -22,7 +22,7 @@ export default function EndMenuButtons({
         type="button"
         className={hasCheckpoint ? 'start-btn secondary-btn' : 'start-btn'}
         onClick={onStartOver}>
-        START OVER
+        {hasCheckpoint ? 'START OVER' : 'START'}
       </button>
       <button type="button" className="start-btn secondary-btn" onClick={onChangeShip}>
         CHANGE SHIP
