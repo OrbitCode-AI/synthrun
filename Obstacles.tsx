@@ -312,7 +312,7 @@ function spawnLevel2Obstacles(
   newState.distance = state.distance + distanceDelta
   newState.level2Distance = state.level2Distance + distanceDelta
 
-  const color = getLevelColor(6) // White for Level 2
+  const randomColor = () => LEVEL_COLORS[Math.floor(Math.random() * LEVEL_COLORS.length)]
 
   if (state.phase === 'normal') {
     if (newState.level2Distance >= LEVEL2_DISTANCE) {
@@ -323,7 +323,7 @@ function spawnLevel2Obstacles(
     } else if (newState.distance >= state.nextSpawnDistance) {
       const x = (Math.random() - 0.5) * 16
       const yRow = Math.random() < 0.5 ? LEVEL2_LOW_Y : LEVEL2_HIGH_Y
-      obstacles.push(createObstacle(scene, x, color, false, yRow))
+      obstacles.push(createObstacle(scene, x, randomColor(), false, yRow))
       newState.nextSpawnDistance = newState.distance + LEVEL2_SPAWN_INTERVAL
     }
   } else {
@@ -332,7 +332,7 @@ function spawnLevel2Obstacles(
     if (phaseDistance >= LEVEL2_FUNNEL_DISTANCE) {
       newState.majorLevel = 3 // Victory sentinel
     } else if (newState.distance >= state.nextSpawnDistance) {
-      spawnLevel2FunnelWalls(scene, obstacles, newState.funnelProgress, color)
+      spawnLevel2FunnelWalls(scene, obstacles, newState.funnelProgress, randomColor())
       newState.nextSpawnDistance = newState.distance + LEVEL2_FUNNEL_SPAWN_INTERVAL
     }
   }
