@@ -245,8 +245,6 @@ function spawnFunnelWalls(
  */
 export const OBSTACLE_GROUND_Y = 0.5 // Ground-level obstacle center Y
 export const OBSTACLE_HIGH_Y = 3.0 // High obstacle center Y (jump height)
-const HIGH_OBSTACLE_CHANCE_BASE = 0.2 // Base chance to spawn high obstacle (increases with level)
-
 /**
  * Create a single obstacle cube (ground or high)
  */
@@ -267,15 +265,6 @@ export function createObstacle(
   cube.userData.high = high
   scene.add(cube)
   return cube
-}
-
-/**
- * Determine if a spawned obstacle should be high, based on level
- */
-export function shouldSpawnHigh(level: number): boolean {
-  // Higher levels = more high obstacles (20% at level 1, up to 45% at level 6)
-  const chance = Math.min(0.45, HIGH_OBSTACLE_CHANCE_BASE + (level - 1) * 0.05)
-  return Math.random() < chance
 }
 
 /**
@@ -376,8 +365,7 @@ export function spawnObstacles(
       newState.nextSpawnDistance = newState.distance
     } else if (newState.distance >= state.nextSpawnDistance) {
       const x = (Math.random() - 0.5) * 16
-      const high = shouldSpawnHigh(state.level)
-      obstacles.push(createObstacle(scene, x, color, high))
+      obstacles.push(createObstacle(scene, x, color))
       newState.nextSpawnDistance =
         newState.distance + SPAWN_INTERVAL + Math.random() * SPAWN_INTERVAL
       newSpeed = Math.min(getLevelSpeed(state.level) + 0.5, currentSpeed + 0.01)
