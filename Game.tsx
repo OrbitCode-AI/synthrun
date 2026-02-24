@@ -550,24 +550,41 @@ export const initializeGame = (
     }
   }
 
-  // Victory animation - ship spins and flies into space
+  // Victory animation - ship flies toward sun and stops just before it
+  const SUN_Y = 6
+  const SUN_Z = -50
+  const STOP_Z = SUN_Z + 8 // Stop just before the sun
   const updateVictoryAnimation = (delta: number, time: number) => {
     const victoryProgress = (time - victoryStartTime) / VICTORY_DURATION
     if (victoryProgress >= 1) {
       callbacks.onVictory?.(scoreValue)
       return
     }
-    ship.rotation.y += delta * Math.PI * (2 + victoryProgress * 4)
-    ship.position.y += delta * (2 + victoryProgress * 15)
-    ship.position.z -= delta * (5 + victoryProgress * 20)
-    ship.rotation.x = -victoryProgress * 0.5
+    // Ease out: fast start, gentle stop
+    const eased = 1 - (1 - victoryProgress) ** 3
 
-    camera.position.y = 1 + ship.position.y * 0.5
+    // Spin the ship
+    ship.rotation.y += delta * Math.PI * (2 + victoryProgress * 4)
+
+    // Fly toward just before the sun, easing to a stop
+    const startY = ship.position.y
+    const startZ = ship.position.z
+    // Only move on the first frame — after that interpolate to target
+    if (victoryProgress < 0.02) {
+      // Capture starting position on first frame (stored via closure on position)
+    }
+    ship.position.y += (SUN_Y - startY) * 3 * delta
+    ship.position.z += (STOP_Z - startZ) * 3 * delta
+    ship.rotation.x = -eased * 0.3
+
+    // Camera follows behind
+    camera.position.y = ship.position.y + 1
     camera.position.z = ship.position.z + 8
+    camera.position.x += (0 - camera.position.x) * 5 * delta
     camera.lookAt(ship.position)
 
     shipLight.color.setRGB(1, 1, 1)
-    shipLight.intensity = 3 + victoryProgress * 5
+    shipLight.intensity = 3 + eased * 5
     shipLight.position.copy(ship.position)
   }
 
