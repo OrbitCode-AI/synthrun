@@ -9,6 +9,7 @@ import { initializeGame } from './Game'
 import Music from './Music'
 import ShipPicker from './ShipPicker'
 import type { ShipConfig } from './Ships'
+import EndMenuButtons from './EndMenu'
 import './styles.css'
 
 interface GameInstance {
@@ -87,20 +88,28 @@ export default function App() {
     setDisplayShipName(ship.name)
   }
 
-  const handleStart = () => {
-    // Resume after the last completed level
-    const startMajor = completedLevel.major >= 1 && completedLevel.sub >= 6 ? 2 : 1
-    const startSub = startMajor === 1 ? completedLevel.sub + 1 : 1
-    const startScore = completedLevel.score
+  const startGame = (major: number, sub: number, startScore: number) => {
     setStarted(true)
     setIsNewHighScore(false)
     setGameOver(false)
     setVictory(false)
     setPaused(false)
     setLevelClear(false)
-    setCurrentMajorLevel(startMajor)
+    setCurrentMajorLevel(major)
     setScore(startScore)
-    gameRef.current?.start(startMajor, startSub, startScore)
+    gameRef.current?.start(major, sub, startScore)
+  }
+
+  const handleStart = () => {
+    // Resume after the last completed level
+    const startMajor = completedLevel.major >= 1 && completedLevel.sub >= 6 ? 2 : 1
+    const startSub = startMajor === 1 ? completedLevel.sub + 1 : 1
+    startGame(startMajor, startSub, completedLevel.score)
+  }
+
+  const handleStartOver = () => {
+    setCompletedLevel({ major: 0, sub: 0, score: 0 })
+    startGame(1, 1, 0)
   }
 
   const handleChangeShip = () => {
@@ -117,6 +126,8 @@ export default function App() {
     setLevelClear(false)
     setCurrentMajorLevel(1)
   }
+
+  const hasCheckpoint = completedLevel.major >= 1
 
   const handleClick = () => window.focus()
 
@@ -151,14 +162,13 @@ export default function App() {
         {!started && (
           <div className="menu">
             <h1 className="title">SYNTH RUN</h1>
-            <div className="menu-buttons">
-              <button type="button" className="start-btn" onClick={handleStart}>
-                START
-              </button>
-              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
-                CHANGE SHIP
-              </button>
-            </div>
+            <EndMenuButtons
+              hasCheckpoint={hasCheckpoint}
+              primaryLabel="CONTINUE"
+              onResume={handleStart}
+              onStartOver={handleStartOver}
+              onChangeShip={handleChangeShip}
+            />
           </div>
         )}
         {started && !gameOver && !victory && (
@@ -190,14 +200,13 @@ export default function App() {
             <h1 className="game-over">GAME OVER</h1>
             <p className="final-score">SCORE: {score}</p>
             {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
-            <div className="menu-buttons">
-              <button type="button" className="start-btn" onClick={handleStart}>
-                RETRY
-              </button>
-              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
-                CHANGE SHIP
-              </button>
-            </div>
+            <EndMenuButtons
+              hasCheckpoint={hasCheckpoint}
+              primaryLabel="TRY AGAIN"
+              onResume={handleStart}
+              onStartOver={handleStartOver}
+              onChangeShip={handleChangeShip}
+            />
           </div>
         )}
         {victory && (
@@ -205,14 +214,13 @@ export default function App() {
             <h1 className="victory">VICTORY!</h1>
             <p className="final-score">FINAL SCORE: {score}</p>
             {isNewHighScore && <p className="new-high-score">NEW HIGH SCORE!</p>}
-            <div className="menu-buttons">
-              <button type="button" className="start-btn" onClick={handleStart}>
-                PLAY AGAIN
-              </button>
-              <button type="button" className="start-btn secondary-btn" onClick={handleChangeShip}>
-                CHANGE SHIP
-              </button>
-            </div>
+            <EndMenuButtons
+              hasCheckpoint={false}
+              primaryLabel=""
+              onResume={handleStartOver}
+              onStartOver={handleStartOver}
+              onChangeShip={handleChangeShip}
+            />
           </div>
         )}
       </div>
