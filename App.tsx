@@ -12,7 +12,7 @@ import type { ShipConfig } from './Ships'
 import './styles.css'
 
 interface GameInstance {
-  start: () => void
+  start: (startingMajorLevel?: number) => void
   cleanup: () => void
 }
 
@@ -24,6 +24,7 @@ export default function App() {
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useVar('highScore', 0)
+  const [level1Cleared, setLevel1Cleared] = useVar('level1Cleared', false)
   const [isNewHighScore, setIsNewHighScore] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
@@ -39,21 +40,13 @@ export default function App() {
         // Start or restart when showing a menu (not started, game over, or victory)
         if (!started || gameOver || victory) {
           e.preventDefault()
-          setStarted(true)
-          setIsNewHighScore(false)
-          setGameOver(false)
-          setVictory(false)
-          setPaused(false)
-          setLevelClear(false)
-          setCurrentMajorLevel(1)
-          setScore(0)
-          gameRef.current?.start()
+          handleStart()
         }
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedShip, started, gameOver, victory])
+  }, [selectedShip, started, gameOver, victory, level1Cleared])
 
   // Initialize game when ship is selected
   useEffect(() => {
@@ -70,7 +63,10 @@ export default function App() {
         },
         onPause: setPaused,
         onShipChange: (ship: ShipConfig) => setDisplayShipName(ship.name),
-        onLevelClear: () => setLevelClear(true),
+        onLevelClear: () => {
+          setLevelClear(true)
+          setLevel1Cleared(true)
+        },
         onLevelClearDone: () => {
           setLevelClear(false)
           setCurrentMajorLevel(2)
@@ -90,15 +86,16 @@ export default function App() {
   }
 
   const handleStart = () => {
+    const startLevel = level1Cleared ? 2 : 1
     setStarted(true)
     setIsNewHighScore(false)
     setGameOver(false)
     setVictory(false)
     setPaused(false)
     setLevelClear(false)
-    setCurrentMajorLevel(1)
+    setCurrentMajorLevel(startLevel)
     setScore(0)
-    gameRef.current?.start()
+    gameRef.current?.start(startLevel)
   }
 
   const handleChangeShip = () => {
@@ -167,7 +164,6 @@ export default function App() {
         {levelClear && (
           <div className="menu level-clear-overlay">
             <h1 className="level-clear">LEVEL 1 CLEAR!</h1>
-            <p className="level-clear-subtitle">PREPARE FOR FLIGHT MODE</p>
           </div>
         )}
         {(!started || paused || gameOver || victory) && (

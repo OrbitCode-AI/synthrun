@@ -612,7 +612,7 @@ export const initializeGame = (
   animate()
 
   return {
-    start: () => {
+    start: (startingMajorLevel = 1) => {
       renderer.domElement.focus()
       clearObstacles(scene, cubes)
       isStarted = true
@@ -633,17 +633,31 @@ export const initializeGame = (
       shipLight.position.copy(ship.position)
       camera.position.x = 0
 
-      majorLevel = 1
-      ship.position.y = GROUND_Y
-      camera.position.y = 1.5
       const startTime = timer.getElapsed()
       obstacleState = createObstacleState(startTime)
-      speed = getLevelSpeed(1)
-      currentLevel = 1
-      const levelColor = getLevelColor(1)
-      ground.setColor(levelColor)
-      horizon.setColor(levelColor)
-      shipLight.color.setHex(levelColor)
+
+      if (startingMajorLevel >= 2) {
+        majorLevel = 2
+        ship.position.y = LEVEL2_BASE_Y
+        camera.position.y = LEVEL2_BASE_Y + 0.9
+        obstacleState.majorLevel = 2
+        speed = 2.0
+        currentLevel = 7
+        const levelColor = getLevelColor(6)
+        ground.setColor(levelColor)
+        horizon.setColor(levelColor)
+        shipLight.color.setHex(levelColor)
+      } else {
+        majorLevel = 1
+        ship.position.y = GROUND_Y
+        camera.position.y = 1.5
+        speed = getLevelSpeed(1)
+        currentLevel = 1
+        const levelColor = getLevelColor(1)
+        ground.setColor(levelColor)
+        horizon.setColor(levelColor)
+        shipLight.color.setHex(levelColor)
+      }
     },
     cleanup: () => {
       cancelAnimationFrame(animationId)
