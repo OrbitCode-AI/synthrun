@@ -555,41 +555,38 @@ export const initializeGame = (
     }
   }
 
-  // Victory animation - ship flies toward sun and stops just before it
-  const SUN_Y = 6
-  const SUN_Z = -50
-  const STOP_Z = SUN_Z + 8 // Stop just before the sun
+  // Victory animation - ship spins and flies into space
   const updateVictoryAnimation = (delta: number, time: number) => {
     const victoryProgress = (time - victoryStartTime) / VICTORY_DURATION
     if (victoryProgress >= 1) {
-      callbacks.onVictory?.(scoreValue)
+      if (isStarted) {
+        isStarted = false
+        callbacks.onVictory?.(scoreValue)
+      }
       return
     }
-    // Ease out: fast start, gentle stop
-    const eased = 1 - (1 - victoryProgress) ** 3
+    // Spin faster and faster (exponential acceleration)
+    ship.rotation.y += delta * Math.PI * (2 + victoryProgress * victoryProgress * 20)
 
-    // Spin the ship
-    ship.rotation.y += delta * Math.PI * (2 + victoryProgress * 4)
+    // Fly upward with increasing speed
+    ship.position.y += delta * (2 + victoryProgress * 15)
 
-    // Fly toward just before the sun, easing to a stop
-    const startY = ship.position.y
-    const startZ = ship.position.z
-    // Only move on the first frame — after that interpolate to target
-    if (victoryProgress < 0.02) {
-      // Capture starting position on first frame (stored via closure on position)
+    // Move forward but stop before the sun (Z=-50)
+    if (ship.position.z > -40) {
+      ship.position.z -= delta * (5 + victoryProgress * 10)
     }
-    ship.position.y += (SUN_Y - startY) * 3 * delta
-    ship.position.z += (STOP_Z - startZ) * 3 * delta
-    ship.rotation.x = -eased * 0.3
 
-    // Camera follows behind
-    camera.position.y = ship.position.y + 1
-    camera.position.z = ship.position.z + 8
-    camera.position.x += (0 - camera.position.x) * 5 * delta
+    // Tilt up slightly as we take off
+    ship.rotation.x = -victoryProgress * 0.5
+
+    // Camera lags behind so ship shrinks into the distance
+    camera.position.y += (1 + ship.position.y * 0.15 - camera.position.y) * 3 * delta
+    camera.position.z += (ship.position.z + 12 - camera.position.z) * 1.5 * delta
     camera.lookAt(ship.position)
 
+    // White light, intensifying as ship ascends
     shipLight.color.setRGB(1, 1, 1)
-    shipLight.intensity = 3 + eased * 5
+    shipLight.intensity = 3 + victoryProgress * 5
     shipLight.position.copy(ship.position)
   }
 
@@ -606,9 +603,9 @@ export const initializeGame = (
     sun.update(time)
     sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
-    if (isLevelClear) updateLevelClear(delta, time)
-    else if (isStarted && !isGameOver && !isPaused) updateGameplay(delta, time)
     if (isVictory) updateVictoryAnimation(delta, time)
+    else if (isLevelClear) updateLevelClear(delta, time)
+    else if (isStarted && !isGameOver && !isPaused) updateGameplay(delta, time)
 
     composer.render()
     animationId = requestAnimationFrame(animate)
