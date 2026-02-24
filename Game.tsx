@@ -176,6 +176,7 @@ interface GameCallbacks {
   onVictory?: (score: number) => void
   onPause?: (paused: boolean) => void
   onShipChange?: (ship: ShipConfig) => void
+  onSubLevelComplete?: (majorLevel: number, subLevel: number) => void
   onLevelClear?: () => void
   onLevelClearDone?: () => void
 }
@@ -399,6 +400,7 @@ export const initializeGame = (
       levelClearStartTime = time
       clearObstacles(scene, cubes)
       velocity = 0
+      callbacks.onSubLevelComplete?.(1, 6)
       callbacks.onLevelClear?.()
     } else if (majorLevel === 2 && obstacleState && obstacleState.majorLevel === 3) {
       // Level 2 complete → actual victory
@@ -418,6 +420,8 @@ export const initializeGame = (
       spinAxis = axes[Math.floor(Math.random() * 2)]
       spinDirection = Math.random() < 0.5 ? 1 : -1
       spinStartRotation = { x: ship.rotation.x, y: ship.rotation.y, z: ship.rotation.z }
+      // Notify that previous sub-level was completed (currentLevel is already the new one)
+      callbacks.onSubLevelComplete?.(majorLevel, currentLevel - 1)
     }
   }
 
@@ -613,7 +617,7 @@ export const initializeGame = (
   animate()
 
   return {
-    start: (startingMajorLevel = 1) => {
+    start: (startingMajorLevel = 1, startingSubLevel = 1) => {
       renderer.domElement.focus()
       clearObstacles(scene, cubes)
       isStarted = true
@@ -652,9 +656,12 @@ export const initializeGame = (
         majorLevel = 1
         ship.position.y = GROUND_Y
         camera.position.y = 1.5
-        speed = getLevelSpeed(1)
-        currentLevel = 1
-        const levelColor = getLevelColor(1)
+        // Start at the sub-level after the last completed one
+        const subLevel = Math.max(1, Math.min(6, startingSubLevel))
+        obstacleState.level = subLevel
+        currentLevel = subLevel
+        speed = getLevelSpeed(subLevel)
+        const levelColor = getLevelColor(subLevel)
         ground.setColor(levelColor)
         horizon.setColor(levelColor)
         shipLight.color.setHex(levelColor)

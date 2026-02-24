@@ -12,7 +12,7 @@ import type { ShipConfig } from './Ships'
 import './styles.css'
 
 interface GameInstance {
-  start: (startingMajorLevel?: number) => void
+  start: (startingMajorLevel?: number, startingSubLevel?: number) => void
   cleanup: () => void
 }
 
@@ -24,7 +24,7 @@ export default function App() {
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useVar('highScore', 0)
-  const [level1Cleared, setLevel1Cleared] = useVar('level1Cleared', false)
+  const [completedLevel, setCompletedLevel] = useVar('completedLevel', { major: 0, sub: 0 })
   const [isNewHighScore, setIsNewHighScore] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
@@ -46,7 +46,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedShip, started, gameOver, victory, level1Cleared])
+  }, [selectedShip, started, gameOver, victory, completedLevel])
 
   // Initialize game when ship is selected
   useEffect(() => {
@@ -63,9 +63,11 @@ export default function App() {
         },
         onPause: setPaused,
         onShipChange: (ship: ShipConfig) => setDisplayShipName(ship.name),
+        onSubLevelComplete: (major: number, sub: number) => {
+          setCompletedLevel({ major, sub })
+        },
         onLevelClear: () => {
           setLevelClear(true)
-          setLevel1Cleared(true)
         },
         onLevelClearDone: () => {
           setLevelClear(false)
@@ -86,16 +88,18 @@ export default function App() {
   }
 
   const handleStart = () => {
-    const startLevel = level1Cleared ? 2 : 1
+    // Resume after the last completed level
+    const startMajor = completedLevel.major >= 1 && completedLevel.sub >= 6 ? 2 : 1
+    const startSub = startMajor === 1 ? completedLevel.sub + 1 : 1
     setStarted(true)
     setIsNewHighScore(false)
     setGameOver(false)
     setVictory(false)
     setPaused(false)
     setLevelClear(false)
-    setCurrentMajorLevel(startLevel)
+    setCurrentMajorLevel(startMajor)
     setScore(0)
-    gameRef.current?.start(startLevel)
+    gameRef.current?.start(startMajor, startSub)
   }
 
   const handleChangeShip = () => {
