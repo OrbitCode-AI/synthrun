@@ -262,7 +262,7 @@ export const initializeGame = (
   const GROUND_Y = 0.3 // Ship resting Y position
 
   // Major level state
-  let majorLevel = 2 // TODO: change back to 1 after playtesting
+  let majorLevel = 1
   let isLevelClear = false
   let levelClearStartTime = 0
   const LEVEL_CLEAR_DURATION = 3
@@ -633,33 +633,17 @@ export const initializeGame = (
       shipLight.position.copy(ship.position)
       camera.position.x = 0
 
-      // TODO: change back to 1 after playtesting
-      majorLevel = 2
-      if (majorLevel === 2) {
-        // Start directly in Level 2 for playtesting
-        ship.position.y = LEVEL2_BASE_Y
-        camera.position.y = 1.2 + (LEVEL2_BASE_Y - GROUND_Y) * 0.5
-        const startTime = timer.getElapsed()
-        obstacleState = createObstacleState(startTime)
-        obstacleState.majorLevel = 2
-        speed = 2.0
-        currentLevel = 7
-        const levelColor = getLevelColor(6)
-        ground.setColor(levelColor)
-        horizon.setColor(levelColor)
-        shipLight.color.setHex(levelColor)
-      } else {
-        ship.position.y = GROUND_Y
-        camera.position.y = 1.5
-        const startTime = timer.getElapsed()
-        obstacleState = createObstacleState(startTime)
-        speed = getLevelSpeed(1)
-        currentLevel = 1
-        const levelColor = getLevelColor(1)
-        ground.setColor(levelColor)
-        horizon.setColor(levelColor)
-        shipLight.color.setHex(levelColor)
-      }
+      majorLevel = 1
+      ship.position.y = GROUND_Y
+      camera.position.y = 1.5
+      const startTime = timer.getElapsed()
+      obstacleState = createObstacleState(startTime)
+      speed = getLevelSpeed(1)
+      currentLevel = 1
+      const levelColor = getLevelColor(1)
+      ground.setColor(levelColor)
+      horizon.setColor(levelColor)
+      shipLight.color.setHex(levelColor)
     },
     cleanup: () => {
       cancelAnimationFrame(animationId)
