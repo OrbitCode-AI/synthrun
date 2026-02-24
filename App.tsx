@@ -164,6 +164,7 @@ export default function App() {
         {levelClear && (
           <div className="menu level-clear-overlay">
             <h1 className="level-clear">LEVEL 1 CLEAR!</h1>
+            <p className="level-clear-subtitle">PREPARE FOR FLIGHT MODE</p>
           </div>
         )}
         {(!started || paused || gameOver || victory) && (

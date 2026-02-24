@@ -446,6 +446,23 @@
   animation: levelClearGlow 0.8s ease-in-out infinite alternate;
 }
 
+.level-clear-subtitle {
+  font-size: 1.2rem;
+  color: #00ffff;
+  letter-spacing: 0.4em;
+  margin: 1rem 0;
+  animation: subtitleFade 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes subtitleFade {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes levelClearGlow {
   from {
     filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.9));
