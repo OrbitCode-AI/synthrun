@@ -28,6 +28,8 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [levelClear, setLevelClear] = useState(false)
+  const [currentMajorLevel, setCurrentMajorLevel] = useState(1)
   const [displayShipName, setDisplayShipName] = useState('')
 
   // Enter key to start/restart when menu is showing
@@ -42,6 +44,8 @@ export default function App() {
           setGameOver(false)
           setVictory(false)
           setPaused(false)
+          setLevelClear(false)
+          setCurrentMajorLevel(1)
           setScore(0)
           gameRef.current?.start()
         }
@@ -66,6 +70,11 @@ export default function App() {
         },
         onPause: setPaused,
         onShipChange: (ship: ShipConfig) => setDisplayShipName(ship.name),
+        onLevelClear: () => setLevelClear(true),
+        onLevelClearDone: () => {
+          setLevelClear(false)
+          setCurrentMajorLevel(2)
+        },
       },
       selectedShip,
       selectedAnim,
@@ -86,6 +95,8 @@ export default function App() {
     setGameOver(false)
     setVictory(false)
     setPaused(false)
+    setLevelClear(false)
+    setCurrentMajorLevel(1)
     setScore(0)
     gameRef.current?.start()
   }
@@ -101,6 +112,8 @@ export default function App() {
     setGameOver(false)
     setVictory(false)
     setPaused(false)
+    setLevelClear(false)
+    setCurrentMajorLevel(1)
   }
 
   const handleClick = () => window.focus()
@@ -151,8 +164,18 @@ export default function App() {
             <div className="score">SCORE: {score}</div>
           </div>
         )}
+        {levelClear && (
+          <div className="menu level-clear-overlay">
+            <h1 className="level-clear">LEVEL 1 CLEAR!</h1>
+            <p className="level-clear-subtitle">PREPARE FOR FLIGHT MODE</p>
+          </div>
+        )}
         {(!started || paused || gameOver || victory) && (
-          <p className="controls">AD move • W jump • P pause • Enter start</p>
+          <p className="controls">
+            {currentMajorLevel === 2
+              ? 'AD move \u00b7 WS fly \u00b7 P pause \u00b7 Enter start'
+              : 'AD move \u00b7 WS camera \u00b7 P pause \u00b7 Enter start'}
+          </p>
         )}
         {paused && (
           <div className="menu">

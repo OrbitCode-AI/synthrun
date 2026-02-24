@@ -157,6 +157,14 @@ const FUNNEL_DISTANCE = 55 // Distance of funnel pattern (~5 sec)
 const SPAWN_INTERVAL = 5 // Distance between random obstacle spawns (~0.5 sec)
 const FUNNEL_SPAWN_INTERVAL = 2 // Distance between funnel wall spawns
 
+// Level 2 constants
+const LEVEL2_LOW_Y = 1.5 // Low corridor obstacle row
+const LEVEL2_HIGH_Y = 5.0 // High corridor obstacle row
+const LEVEL2_SPAWN_INTERVAL = 3 // Denser than L1's 5-10
+const LEVEL2_DISTANCE = 1500 // World units before funnel/victory
+const LEVEL2_FUNNEL_DISTANCE = 55
+const LEVEL2_FUNNEL_SPAWN_INTERVAL = 1.5
+
 export interface ObstacleState {
   level: number
   phase: 'normal' | 'funnel'
@@ -164,6 +172,8 @@ export interface ObstacleState {
   nextSpawnDistance: number
   distance: number // Total distance traveled
   funnelProgress: number // 0-1, how far through funnel we are
+  majorLevel: number // 1 = camera altitude, 2 = free-fly, 3 = victory sentinel
+  level2Distance: number // Distance traveled in Level 2
 }
 
 /**
@@ -177,7 +187,21 @@ export function createObstacleState(_startTime: number): ObstacleState {
     nextSpawnDistance: 15, // Initial delay before first obstacle
     distance: 0,
     funnelProgress: 0,
+    majorLevel: 1,
+    level2Distance: 0,
   }
+}
+
+/**
+ * Get Level 1 progress (0→1) based on sub-level and phase progress.
+ * Used by Game.tsx to compute max camera altitude.
+ */
+export function getLevel1Progress(state: ObstacleState): number {
+  if (state.majorLevel !== 1) return 1
+  const phaseDistance = state.distance - state.phaseStartDistance
+  const totalPhaseDistance = state.phase === 'normal' ? LEVEL_DISTANCE : FUNNEL_DISTANCE
+  const phaseProgress = Math.min(1, phaseDistance / totalPhaseDistance)
+  return Math.min(1, (state.level - 1 + phaseProgress) / 6)
 }
 
 /**
@@ -226,12 +250,18 @@ const HIGH_OBSTACLE_CHANCE_BASE = 0.2 // Base chance to spawn high obstacle (inc
 /**
  * Create a single obstacle cube (ground or high)
  */
-export function createObstacle(scene: three.Scene, x: number, color: number, high = false): three.Mesh {
+export function createObstacle(
+  scene: three.Scene,
+  x: number,
+  color: number,
+  high = false,
+  yOverride?: number,
+): three.Mesh {
   const cube = new three.Mesh(
     new three.BoxGeometry(1, 1, 1),
     new three.MeshBasicMaterial({ color, transparent: true, opacity: high ? 0.7 : 0.9 }),
   )
-  const y = high ? OBSTACLE_HIGH_Y : OBSTACLE_GROUND_Y
+  const y = yOverride !== undefined ? yOverride : high ? OBSTACLE_HIGH_Y : OBSTACLE_GROUND_Y
   cube.position.set(x, y, -40)
   cube.userData.passed = false
   cube.userData.high = high
@@ -249,6 +279,68 @@ export function shouldSpawnHigh(level: number): boolean {
 }
 
 /**
+ * Spawn funnel walls at both Y rows for Level 2
+ */
+function spawnLevel2FunnelWalls(
+  scene: three.Scene,
+  target: three.Mesh[],
+  progress: number,
+  color: number,
+): void {
+  const FULL_WIDTH = 8
+  const MIN_GAP = 2.4
+  const gapHalf = FULL_WIDTH - progress * (FULL_WIDTH - MIN_GAP / 2)
+  const cubeSpacing = 1.5
+  for (let x = -FULL_WIDTH; x <= FULL_WIDTH; x += cubeSpacing) {
+    if (x < -gapHalf || x > gapHalf) {
+      target.push(createObstacle(scene, x, color, false, LEVEL2_LOW_Y))
+      target.push(createObstacle(scene, x, color, false, LEVEL2_HIGH_Y))
+    }
+  }
+}
+
+/**
+ * Spawn Level 2 obstacles (two-row corridor)
+ */
+function spawnLevel2Obstacles(
+  scene: three.Scene,
+  state: ObstacleState,
+  obstacles: three.Mesh[],
+  distanceDelta: number,
+): { newState: ObstacleState; newSpeed: number } {
+  const newState = { ...state }
+  newState.distance = state.distance + distanceDelta
+  newState.level2Distance = state.level2Distance + distanceDelta
+
+  const color = getLevelColor(6) // White for Level 2
+
+  if (state.phase === 'normal') {
+    if (newState.level2Distance >= LEVEL2_DISTANCE) {
+      newState.phase = 'funnel'
+      newState.phaseStartDistance = newState.distance
+      newState.funnelProgress = 0
+      newState.nextSpawnDistance = newState.distance
+    } else if (newState.distance >= state.nextSpawnDistance) {
+      const x = (Math.random() - 0.5) * 16
+      const yRow = Math.random() < 0.5 ? LEVEL2_LOW_Y : LEVEL2_HIGH_Y
+      obstacles.push(createObstacle(scene, x, color, false, yRow))
+      newState.nextSpawnDistance = newState.distance + LEVEL2_SPAWN_INTERVAL
+    }
+  } else {
+    const phaseDistance = newState.distance - state.phaseStartDistance
+    newState.funnelProgress = phaseDistance / LEVEL2_FUNNEL_DISTANCE
+    if (phaseDistance >= LEVEL2_FUNNEL_DISTANCE) {
+      newState.majorLevel = 3 // Victory sentinel
+    } else if (newState.distance >= state.nextSpawnDistance) {
+      spawnLevel2FunnelWalls(scene, obstacles, newState.funnelProgress, color)
+      newState.nextSpawnDistance = newState.distance + LEVEL2_FUNNEL_SPAWN_INTERVAL
+    }
+  }
+
+  return { newState, newSpeed: 2.0 }
+}
+
+/**
  * Spawn obstacles based on distance traveled
  * Returns array of new obstacles and updated state
  */
@@ -259,11 +351,18 @@ export function spawnObstacles(
   currentSpeed: number,
 ): { obstacles: three.Mesh[]; newState: ObstacleState; newSpeed: number } {
   const obstacles: three.Mesh[] = []
+  const distanceDelta = delta * currentSpeed * 15
+
+  // Level 2: two-row corridor spawning
+  if (state.majorLevel === 2) {
+    const result = spawnLevel2Obstacles(scene, state, obstacles, distanceDelta)
+    return { obstacles, ...result }
+  }
+
+  // Level 1: existing logic
   const newState = { ...state }
   let newSpeed = currentSpeed
 
-  // Update distance traveled (speed * 15 matches cube movement in updateObstacles)
-  const distanceDelta = delta * currentSpeed * 15
   newState.distance = state.distance + distanceDelta
 
   const phaseDistance = newState.distance - state.phaseStartDistance
@@ -292,6 +391,16 @@ export function spawnObstacles(
       newState.funnelProgress = 0
       newState.nextSpawnDistance = newState.distance + SPAWN_INTERVAL
       newSpeed = getLevelSpeed(newState.level)
+      // Transition to Level 2 after sub-level 6
+      if (newState.level > 6) {
+        newState.majorLevel = 2
+        newState.level2Distance = 0
+        newState.phase = 'normal'
+        newState.phaseStartDistance = newState.distance
+        newState.nextSpawnDistance = newState.distance + LEVEL2_SPAWN_INTERVAL
+        newState.funnelProgress = 0
+        newSpeed = 2.0
+      }
     } else if (newState.distance >= state.nextSpawnDistance) {
       spawnFunnelWalls(scene, obstacles, newState.funnelProgress, color)
       newState.nextSpawnDistance = newState.distance + FUNNEL_SPAWN_INTERVAL

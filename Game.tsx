@@ -12,6 +12,7 @@ import {
   clearObstacles,
   getLevelColor,
   getLevelSpeed,
+  getLevel1Progress,
   createObstacle,
   type ObstacleState,
 } from './Obstacles'
@@ -175,6 +176,8 @@ interface GameCallbacks {
   onVictory?: (score: number) => void
   onPause?: (paused: boolean) => void
   onShipChange?: (ship: ShipConfig) => void
+  onLevelClear?: () => void
+  onLevelClearDone?: () => void
 }
 
 // Export as arrow function assigned to const - HMR should not wrap this as a component
@@ -256,13 +259,25 @@ export const initializeGame = (
   const keys = { left: false, right: false, up: false, down: false }
   let obstacleState: ObstacleState | null = null
 
-  // Jump physics
-  const JUMP_VELOCITY = 8.5 // Initial upward velocity
-  const GRAVITY = 18 // Gravity pulling ship down
   const GROUND_Y = 0.3 // Ship resting Y position
-  let jumpVelocityY = 0
-  let isJumping = false
-  let canJump = true // Prevent holding W to repeatedly jump
+
+  // Major level state
+  let majorLevel = 2 // TODO: change back to 1 after playtesting
+  let isLevelClear = false
+  let levelClearStartTime = 0
+  const LEVEL_CLEAR_DURATION = 3
+
+  // Level 1: camera altitude control (0 = over-the-shoulder, 1 = bird's-eye)
+  let cameraAltitude = 1.0
+  let cameraAltVelocity = 0
+  const CAM_ALT_ACCEL = 2.0
+  const CAM_ALT_FRICTION = 0.90
+
+  // Level 2: ship vertical flight
+  let verticalVelocity = 0
+  const VERT_ACCEL = 35
+  const VERT_FRICTION = 0.92
+  const LEVEL2_BASE_Y = 3.0
 
   // Ship/animation state for in-game switching
   let currentShipIndex = shipConfig ? SHIPS.findIndex(s => s.id === shipConfig.id) : 0
@@ -376,14 +391,23 @@ export const initializeGame = (
     }
   }
 
-  // Handle level change (victory or celebration)
+  // Handle level change (level clear, victory, or celebration)
   const handleLevelChange = (time: number) => {
-    if (currentLevel > 6) {
+    if (majorLevel === 1 && currentLevel > 6) {
+      // Level 1 complete → show interstitial
+      isLevelClear = true
+      levelClearStartTime = time
+      clearObstacles(scene, cubes)
+      velocity = 0
+      callbacks.onLevelClear?.()
+    } else if (majorLevel === 2 && obstacleState && obstacleState.majorLevel === 3) {
+      // Level 2 complete → actual victory
       isVictory = true
       victoryStartTime = time
       clearObstacles(scene, cubes)
       velocity = 0
     } else {
+      // Sub-level celebration spin
       const levelColor = getLevelColor(currentLevel)
       ground.setColor(levelColor)
       horizon.setColor(levelColor)
@@ -397,12 +421,105 @@ export const initializeGame = (
     }
   }
 
+  // Update Level 1 Clear interstitial (3-second auto-dismiss)
+  const updateLevelClear = (delta: number, time: number) => {
+    const progress = (time - levelClearStartTime) / LEVEL_CLEAR_DURATION
+
+    // Celebration spin during interstitial
+    ship.rotation.y += delta * Math.PI * 2
+    // Slow ground scroll
+    gridOffset += delta * 0.3 * 3
+    ground.offset.y = gridOffset
+
+    if (progress >= 1) {
+      // Transition to Level 2
+      isLevelClear = false
+      majorLevel = 2
+      const startTime = timer.getElapsed()
+      obstacleState = createObstacleState(startTime)
+      obstacleState.majorLevel = 2
+      speed = 2.0
+      currentLevel = 7 // Beyond L1 sub-levels
+      ship.position.y = LEVEL2_BASE_Y
+      ship.rotation.x = 0
+      ship.rotation.z = 0
+      cameraAltitude = 0
+      cameraAltVelocity = 0
+      verticalVelocity = 0
+      // Update colors for Level 2
+      const levelColor = getLevelColor(6) // White
+      ground.setColor(levelColor)
+      horizon.setColor(levelColor)
+      shipLight.color.setHex(levelColor)
+      callbacks.onLevelClearDone?.()
+    }
+  }
+
+  // Level 1: camera altitude control (ship at ground, up/down moves camera)
+  const updateLevel1Camera = (delta: number) => {
+    ship.position.y = GROUND_Y
+
+    if (keys.up && !keys.down) cameraAltVelocity += CAM_ALT_ACCEL * delta
+    else if (keys.down && !keys.up) cameraAltVelocity -= CAM_ALT_ACCEL * delta
+    else cameraAltVelocity *= CAM_ALT_FRICTION
+
+    cameraAltitude += cameraAltVelocity * delta
+    const maxAltitude = obstacleState ? 1.0 - getLevel1Progress(obstacleState) : 1.0
+    cameraAltitude = Math.max(0, Math.min(maxAltitude, cameraAltitude))
+
+    // Interpolate camera between over-the-shoulder (alt=0) and bird's-eye (alt=1)
+    const camY = 1.2 + cameraAltitude * (4.5 - 1.2)
+    const camZ = 3.5 + cameraAltitude * (8.0 - 3.5)
+    const lookY = cameraAltitude * 0.5
+    const lookZ = -10 - cameraAltitude * 5
+
+    camera.position.x = ship.position.x * 0.9
+    camera.position.y += (camY - camera.position.y) * 5 * delta
+    camera.position.z = camZ
+    camera.lookAt(ship.position.x * 0.9, lookY, lookZ)
+  }
+
+  // Level 2: free-fly (up/down moves ship vertically, camera follows)
+  const updateLevel2Flight = (delta: number) => {
+    if (keys.up && !keys.down) verticalVelocity += VERT_ACCEL * delta
+    else if (keys.down && !keys.up) verticalVelocity -= VERT_ACCEL * delta
+    else verticalVelocity *= VERT_FRICTION
+
+    verticalVelocity = Math.max(-8, Math.min(8, verticalVelocity))
+    ship.position.y += verticalVelocity * delta
+    ship.position.y = Math.max(0.5, Math.min(6.0, ship.position.y))
+    ship.rotation.x = -verticalVelocity * 0.02
+
+    const targetCamY = ship.position.y + 0.9
+    camera.position.x = ship.position.x * 0.9
+    camera.position.y += (targetCamY - camera.position.y) * 15 * delta
+    camera.position.z = 3.5
+    camera.lookAt(ship.position.x * 0.9, ship.position.y, -10)
+  }
+
+  // Spawn obstacles and check level transitions
+  const updateObstacleSpawning = (time: number, delta: number) => {
+    if (!obstacleState) return
+
+    const result = spawnObstacles(scene, obstacleState, delta, speed)
+    cubes.push(...result.obstacles)
+    obstacleState = result.newState
+    speed = result.newSpeed
+
+    if (majorLevel === 1 && obstacleState.level !== currentLevel) {
+      currentLevel = obstacleState.level
+      handleLevelChange(time)
+    } else if (majorLevel === 2 && obstacleState.majorLevel === 3) {
+      handleLevelChange(time)
+    }
+  }
+
   // Update gameplay state (movement, obstacles, collisions)
   const updateGameplay = (delta: number, time: number) => {
     gridOffset += delta * speed * 3
     ground.offset.y = gridOffset
 
-    // Ship horizontal movement
+    // Ship horizontal movement (same for both levels)
     const accel = delta * 35
     if (keys.left && !keys.right) velocity = Math.max(-8, velocity - accel)
     else if (keys.right && !keys.left) velocity = Math.min(8, velocity + accel)
@@ -412,55 +529,17 @@ export const initializeGame = (
     ship.position.x = Math.max(-8, Math.min(8, ship.position.x))
     ship.rotation.z = -velocity * 0.08
 
-    // Jump physics (W/Up to jump)
-    if (keys.up && !isJumping && canJump) {
-      isJumping = true
-      canJump = false
-      jumpVelocityY = JUMP_VELOCITY
-    }
-    // Prevent re-jump while holding W
-    if (!keys.up) canJump = true
-
-    if (isJumping) {
-      jumpVelocityY -= GRAVITY * delta
-      ship.position.y += jumpVelocityY * delta
-      // Tilt nose up while rising, down while falling
-      ship.rotation.x = -jumpVelocityY * 0.02
-      if (ship.position.y <= GROUND_Y) {
-        ship.position.y = GROUND_Y
-        isJumping = false
-        jumpVelocityY = 0
-        ship.rotation.x = 0
-      }
-    }
+    if (majorLevel === 1) updateLevel1Camera(delta)
+    else updateLevel2Flight(delta)
 
     if (isSpinning) updateCelebrationSpin(time)
 
     shipLight.position.copy(ship.position)
-    camera.position.x = ship.position.x * 0.9
-
-    // Camera follows ship vertically (smoothly)
-    const targetCamY = 1.5 + (ship.position.y - GROUND_Y) * 0.5
-    camera.position.y += (targetCamY - camera.position.y) * 5 * delta
-    camera.position.z = 5
-    camera.lookAt(ship.position.x * 0.9, ship.position.y * 0.3, -10)
-
     if (currentMixer) currentMixer.update(delta)
 
-    // Spawn obstacles and check level changes
-    if (obstacleState) {
-      const result = spawnObstacles(scene, obstacleState, delta, speed)
-      cubes.push(...result.obstacles)
-      obstacleState = result.newState
-      speed = result.newSpeed
+    updateObstacleSpawning(time, delta)
 
-      if (obstacleState.level !== currentLevel) {
-        currentLevel = obstacleState.level
-        handleLevelChange(time)
-      }
-    }
-
-    // Check collisions (pass ship Y for jump-aware collision)
+    // Check collisions
     const collision = updateObstacles(scene, cubes, ship.position.x, ship.position.y, delta, speed, scoreDelta => {
       scoreValue += scoreDelta
       callbacks.onScore?.(scoreValue)
@@ -505,7 +584,8 @@ export const initializeGame = (
     sun.update(time)
     sun.mesh.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
 
-    if (isStarted && !isGameOver && !isPaused) updateGameplay(delta, time)
+    if (isLevelClear) updateLevelClear(delta, time)
+    else if (isStarted && !isGameOver && !isPaused) updateGameplay(delta, time)
     if (isVictory) updateVictoryAnimation(delta, time)
 
     composer.render()
@@ -523,28 +603,46 @@ export const initializeGame = (
       isPaused = false
       isVictory = false
       isSpinning = false
+      isLevelClear = false
       scoreValue = 0
       velocity = 0
-      jumpVelocityY = 0
-      isJumping = false
-      canJump = true
+      verticalVelocity = 0
+      cameraAltitude = 1.0
+      cameraAltVelocity = 0
       ship.position.x = 0
-      ship.position.y = GROUND_Y
       ship.rotation.x = 0
       ship.rotation.z = 0
       // Don't touch rotation.y - it's set by loadShipModel based on ship config
       shipLight.position.copy(ship.position)
       camera.position.x = 0
-      camera.position.y = 1.5
-      // Initialize obstacle state with level 1
-      const startTime = timer.getElapsed()
-      obstacleState = createObstacleState(startTime)
-      speed = getLevelSpeed(1)
-      currentLevel = 1
-      const levelColor = getLevelColor(1)
-      ground.setColor(levelColor)
-      horizon.setColor(levelColor)
-      shipLight.color.setHex(levelColor)
+
+      // TODO: change back to 1 after playtesting
+      majorLevel = 2
+      if (majorLevel === 2) {
+        // Start directly in Level 2 for playtesting
+        ship.position.y = LEVEL2_BASE_Y
+        camera.position.y = 1.2 + (LEVEL2_BASE_Y - GROUND_Y) * 0.5
+        const startTime = timer.getElapsed()
+        obstacleState = createObstacleState(startTime)
+        obstacleState.majorLevel = 2
+        speed = 2.0
+        currentLevel = 7
+        const levelColor = getLevelColor(6)
+        ground.setColor(levelColor)
+        horizon.setColor(levelColor)
+        shipLight.color.setHex(levelColor)
+      } else {
+        ship.position.y = GROUND_Y
+        camera.position.y = 1.5
+        const startTime = timer.getElapsed()
+        obstacleState = createObstacleState(startTime)
+        speed = getLevelSpeed(1)
+        currentLevel = 1
+        const levelColor = getLevelColor(1)
+        ground.setColor(levelColor)
+        horizon.setColor(levelColor)
+        shipLight.color.setHex(levelColor)
+      }
     },
     cleanup: () => {
       cancelAnimationFrame(animationId)
