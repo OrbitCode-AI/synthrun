@@ -31,8 +31,7 @@ export default function Music({ playing: externalPlaying }: MusicProps) {
   const [internalCommand, setInternalCommand] = useState<string | null>(null)
   const [songTitle, setSongTitle] = useState('')
   const isPreview = externalPlaying === undefined
-  const effectivePlaying =
-    (externalPlaying === undefined || externalPlaying) && internalPlaying
+  const effectivePlaying = (externalPlaying === undefined || externalPlaying) && internalPlaying
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const lastCommand = useRef<string | null>(null)
   const lastSongTitle = useRef('')

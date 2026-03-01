@@ -290,8 +290,12 @@
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 .ship-info {
@@ -471,4 +475,3 @@
     filter: drop-shadow(0 0 50px rgba(0, 255, 255, 1));
   }
 }
-

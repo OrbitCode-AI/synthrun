@@ -272,7 +272,7 @@ export const initializeGame = (
   let cameraAltitude = 0
   let cameraAltVelocity = 0
   const CAM_ALT_ACCEL = 2.0
-  const CAM_ALT_FRICTION = 0.90
+  const CAM_ALT_FRICTION = 0.9
 
   // Level 2: ship vertical flight
   let verticalVelocity = 0
@@ -381,9 +381,7 @@ export const initializeGame = (
     }
     // Smooth easing (ease-in-out)
     const eased =
-      spinProgress < 0.5
-        ? 2 * spinProgress * spinProgress
-        : 1 - (-2 * spinProgress + 2) ** 2 / 2
+      spinProgress < 0.5 ? 2 * spinProgress * spinProgress : 1 - (-2 * spinProgress + 2) ** 2 / 2
     const spinAngle = eased * Math.PI * 2 * spinDirection
     if (spinAxis === 'x') {
       ship.rotation.x = spinStartRotation.x + spinAngle
@@ -545,10 +543,18 @@ export const initializeGame = (
     updateObstacleSpawning(time, delta)
 
     // Check collisions
-    const collision = updateObstacles(scene, cubes, ship.position.x, ship.position.y, delta, speed, scoreDelta => {
-      scoreValue += scoreDelta
-      callbacks.onScore?.(scoreValue)
-    })
+    const collision = updateObstacles(
+      scene,
+      cubes,
+      ship.position.x,
+      ship.position.y,
+      delta,
+      speed,
+      scoreDelta => {
+        scoreValue += scoreDelta
+        callbacks.onScore?.(scoreValue)
+      },
+    )
     if (collision) {
       isGameOver = true
       callbacks.onGameOver?.()

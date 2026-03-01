@@ -25,7 +25,11 @@ export default function App() {
   const [started, setStarted] = useState(false)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useVar('highScore', 0)
-  const [completedLevel, setCompletedLevel] = useVar('completedLevel', { major: 0, sub: 0, score: 0 })
+  const [completedLevel, setCompletedLevel] = useVar('completedLevel', {
+    major: 0,
+    sub: 0,
+    score: 0,
+  })
   const [isNewHighScore, setIsNewHighScore] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [victory, setVictory] = useState(false)
