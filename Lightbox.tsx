@@ -2,7 +2,7 @@
  * Lightbox - 3D object viewer with spinning colored lights
  * Renders a subject (e.g. ship model) with orbiting light orbs
  */
-import * as three from './three'
+import * as three from 'three'
 import { useEffect, useRef } from 'react'
 import { SCENE_CONFIG } from './Scene'
 

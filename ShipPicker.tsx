@@ -3,7 +3,7 @@
  * Uses Lightbox to display ships with spinning lights
  * Controls: WASD/Arrows to fly, [/] to cycle ships, 1-8 for direct select, M for anims, Enter to confirm
  */
-import * as three from './three'
+import * as three from 'three'
 import { useRef, useState, useEffect, useCallback } from 'preact/hooks'
 import Lightbox from './Lightbox'
 import { SHIPS, loadShipModel, type ShipConfig } from './Ships'

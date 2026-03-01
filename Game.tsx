@@ -1,4 +1,7 @@
-import * as three from './three'
+import * as three from 'three'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { useEffect, useRef } from 'react'
 import { createGround, createHorizon, createStars, applySceneConfig, SCENE_CONFIG } from './Scene'
 import { createSun } from './Sun'
@@ -36,11 +39,11 @@ export default function Game() {
     containerRef.current.appendChild(renderer.domElement)
 
     // Post-processing bloom (controlled by SCENE_CONFIG)
-    const composer = new three.EffectComposer(renderer)
-    composer.addPass(new three.RenderPass(scene, camera))
+    const composer = new EffectComposer(renderer)
+    composer.addPass(new RenderPass(scene, camera))
     if (SCENE_CONFIG.bloomEnabled) {
       composer.addPass(
-        new three.UnrealBloomPass(
+        new UnrealBloomPass(
           new three.Vector2(window.innerWidth, window.innerHeight),
           SCENE_CONFIG.bloomStrength,
           SCENE_CONFIG.bloomRadius,
@@ -202,11 +205,11 @@ export const initializeGame = (
   container.appendChild(renderer.domElement)
 
   // Post-processing bloom (controlled by SCENE_CONFIG)
-  const composer = new three.EffectComposer(renderer)
-  composer.addPass(new three.RenderPass(scene, camera))
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
   if (SCENE_CONFIG.bloomEnabled) {
     composer.addPass(
-      new three.UnrealBloomPass(
+      new UnrealBloomPass(
         new three.Vector2(window.innerWidth, window.innerHeight),
         SCENE_CONFIG.bloomStrength,
         SCENE_CONFIG.bloomRadius,

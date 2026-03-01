@@ -1,7 +1,7 @@
 /**
  * Obstacle generation with level progression and funnel patterns
  */
-import * as three from './three'
+import * as three from 'three'
 import { useEffect, useRef } from 'react'
 import { applySceneConfig } from './Scene'
 

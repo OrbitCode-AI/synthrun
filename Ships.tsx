@@ -1,7 +1,9 @@
 /**
  * Ship model configurations
  */
-import * as three from './three'
+import * as three from 'three'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 
 // Default export for preview
 export default function ShipsConfig() {
@@ -197,8 +199,8 @@ let dracoLoader: any = null
 
 function getLoader() {
   if (!gltfLoader) {
-    gltfLoader = new three.GLTFLoader()
-    dracoLoader = new three.DRACOLoader()
+    gltfLoader = new GLTFLoader()
+    dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/')
     gltfLoader.setDRACOLoader(dracoLoader)
   }

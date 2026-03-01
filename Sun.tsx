@@ -1,7 +1,7 @@
 /**
  * Sun.tsx - Animated sun with shader-based solar flares
  */
-import * as three from './three'
+import * as three from 'three'
 import { useEffect, useRef } from 'react'
 
 // Create sun with animated solar flares

@@ -1,7 +1,7 @@
 /**
  * Ship preview, shared utilities, and game ship creation
  */
-import * as three from './three'
+import * as three from 'three'
 import { useRef, useCallback, useState } from 'preact/hooks'
 import { SHIP_KEYS } from './Keyboard'
 import Lightbox from './Lightbox'
